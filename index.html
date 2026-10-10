@@ -2,7 +2,10 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#191918" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>TriXAI by Namithh.</title>
   <!-- Beautiful Favicon (SVG & Scalable Vector) -->
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
@@ -73,6 +76,30 @@
       background: rgba(140, 138, 130, 0.45);
     }
 
+    /* Mobile-optimized clean horizontal chips rail without ugly scrollbar */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Safe Area Insets for Modern Mobile Screens (iOS Notch & Home Bar) */
+    .pb-safe {
+      padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0.75rem));
+    }
+    .pt-safe {
+      padding-top: max(0.5rem, env(safe-area-inset-top, 0.5rem));
+    }
+
+    /* Mobile active touch feedback */
+    @media (hover: none) {
+      .touch-action-manipulation {
+        touch-action: manipulation;
+      }
+    }
+
     /* Real Claude typography & prose */
     .prose-claude {
       font-size: 0.965rem;
@@ -128,6 +155,8 @@
       padding: 1rem;
       display: block;
       overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      max-width: 100%;
     }
     .prose-claude blockquote {
       border-left: 3px solid #d97757;
@@ -141,6 +170,10 @@
       border-collapse: collapse;
       margin: 1rem 0;
       font-size: 0.88rem;
+      display: block;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      max-width: 100%;
     }
     .prose-claude th, .prose-claude td {
       border: 1px solid rgba(160, 155, 145, 0.2);
@@ -158,10 +191,10 @@
     }
   </style>
 </head>
-<body class="bg-claude-warmIvory text-[#1F1E1D] dark:bg-claude-darkBg dark:text-claude-darkText min-h-screen flex flex-row font-sans transition-colors duration-150 antialiased overflow-hidden">
+<body class="bg-claude-warmIvory text-[#1F1E1D] dark:bg-claude-darkBg dark:text-claude-darkText h-screen h-[100dvh] min-h-[100dvh] flex flex-row font-sans transition-colors duration-150 antialiased overflow-hidden select-none sm:select-auto touch-action-manipulation">
 
   <!-- SIDEBAR (Real Claude Style Collapsible Navigation) -->
-  <aside id="sidebar" class="w-68 flex-shrink-0 bg-[#F4F3ED] dark:bg-claude-darkSidebar border-r border-claude-lightBorder dark:border-claude-darkBorder flex flex-col justify-between transition-all duration-200 z-30 fixed inset-y-0 left-0 md:static -translate-x-full md:translate-x-0">
+  <aside id="sidebar" class="w-72 sm:w-68 max-w-[85vw] flex-shrink-0 bg-[#F4F3ED] dark:bg-claude-darkSidebar border-r border-claude-lightBorder dark:border-claude-darkBorder flex flex-col justify-between transition-transform duration-300 ease-out z-40 fixed inset-y-0 left-0 md:static -translate-x-full md:translate-x-0 shadow-2xl md:shadow-none pb-safe">
     
     <!-- Top Brand & Action Bar -->
     <div class="p-3 flex flex-col space-y-3">
@@ -182,8 +215,8 @@
             <p class="text-[10px] text-claude-lightSubtext dark:text-claude-darkSubtext -mt-1 font-medium">by Namithh.</p>
           </div>
         </div>
-        <button id="closeSidebarBtn" class="md:hidden p-1.5 rounded-lg text-claude-lightSubtext dark:text-claude-darkSubtext hover:bg-black/5 dark:hover:bg-white/5">
-          <i data-lucide="x" class="w-4 h-4"></i>
+        <button id="closeSidebarBtn" class="md:hidden p-2 rounded-xl text-claude-lightSubtext dark:text-claude-darkSubtext hover:bg-black/5 dark:hover:bg-white/5 active:scale-95 transition" aria-label="Close sidebar">
+          <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
 
@@ -266,46 +299,55 @@
   </aside>
 
   <!-- SIDEBAR OVERLAY FOR MOBILE -->
-  <div id="sidebarBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-20 hidden md:hidden"></div>
+  <div id="sidebarBackdrop" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-30 hidden md:hidden transition-opacity duration-300 opacity-0 pointer-events-none"></div>
 
   <!-- MAIN CHAT VIEW -->
-  <div class="flex-1 flex flex-col h-screen overflow-hidden relative">
+  <div class="flex-1 flex flex-col h-screen h-[100dvh] overflow-hidden relative">
 
     <!-- TOP HEADER BAR (Real Claude Minimal Nav) -->
-    <header class="h-14 flex-shrink-0 flex items-center justify-between px-4 sm:px-6 border-b border-claude-lightBorder/70 dark:border-claude-darkBorder/70 bg-claude-warmIvory/85 dark:bg-claude-darkBg/85 backdrop-blur-md z-10">
-      <div class="flex items-center space-x-3">
-        <button id="openSidebarBtn" class="md:hidden p-2 rounded-lg text-claude-lightSubtext dark:text-claude-darkSubtext hover:bg-black/5 dark:hover:bg-white/5">
+    <header class="h-14 flex-shrink-0 flex items-center justify-between px-3 sm:px-6 border-b border-claude-lightBorder/70 dark:border-claude-darkBorder/70 bg-claude-warmIvory/90 dark:bg-claude-darkBg/90 backdrop-blur-md z-10">
+      <div class="flex items-center space-x-2 sm:space-x-3 min-w-0">
+        <button id="openSidebarBtn" class="p-2 -ml-1 rounded-xl text-claude-lightSubtext dark:text-claude-darkSubtext hover:bg-black/5 dark:hover:bg-white/5 active:scale-95 transition" aria-label="Open sidebar menu">
           <i data-lucide="menu" class="w-5 h-5"></i>
         </button>
 
-        <div class="flex items-center space-x-2.5">
-          <span class="font-serif text-lg font-semibold tracking-wide">TriXAI</span>
-          <span class="text-xs text-claude-lightSubtext dark:text-claude-darkSubtext font-normal hidden sm:inline">
+        <div class="flex items-center space-x-2 sm:space-x-2.5 min-w-0">
+          <!-- Mobile Brand Emblem -->
+          <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-[#E88D6D] via-[#D97757] to-[#AD4729] p-1 shadow-xs border border-white/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-full h-full filter drop-shadow-xs" viewBox="0 0 32 32" fill="none">
+              <path d="M16 4 C16 10.5 10.5 16 4 16 C10.5 16 16 21.5 16 28 C16 21.5 21.5 16 28 16 C21.5 16 16 10.5 16 4 Z" fill="#FFFFFF"/>
+              <path d="M16 8 C16 12.5 12.5 16 8 16 C12.5 16 16 19.5 16 24 C16 19.5 19.5 16 24 16 C19.5 16 16 12.5 16 8 Z" fill="#FFFFFF" opacity="0.4" transform="rotate(45 16 16)"/>
+              <circle cx="16" cy="16" r="2.2" fill="#D97757"/>
+              <circle cx="16" cy="16" r="1.1" fill="#FFFFFF"/>
+            </svg>
+          </div>
+          <span class="font-serif text-lg font-semibold tracking-wide truncate">TriXAI</span>
+          <span class="text-xs text-claude-lightSubtext dark:text-claude-darkSubtext font-normal hidden sm:inline truncate">
             by <a href="https://namithrn.vercel.app/" target="_blank" class="hover:text-claude-terracotta transition underline decoration-dotted font-medium">Namithh.</a>
           </span>
 
           <!-- Real Claude Style Model Picker Pill in Header -->
-          <button id="headerModelPickerBtn" class="text-[11px] font-mono px-2.5 py-1 rounded-full bg-claude-terracotta/15 text-claude-terracotta border border-claude-terracotta/25 flex items-center space-x-1.5 hover:bg-claude-terracotta/25 transition cursor-pointer" title="Click to change model">
-            <span class="w-1.5 h-1.5 rounded-full bg-claude-terracotta animate-pulse" id="headerModelStatusDot"></span>
-            <span id="headerModelTag">gpt-oss-20b</span>
-            <i data-lucide="chevron-down" class="w-3 h-3 ml-0.5"></i>
+          <button id="headerModelPickerBtn" class="text-[11px] font-mono px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-claude-terracotta/15 text-claude-terracotta border border-claude-terracotta/25 flex items-center space-x-1 sm:space-x-1.5 hover:bg-claude-terracotta/25 transition cursor-pointer max-w-[110px] sm:max-w-none truncate active:scale-95" title="Click to change model">
+            <span class="w-1.5 h-1.5 rounded-full bg-claude-terracotta animate-pulse flex-shrink-0" id="headerModelStatusDot"></span>
+            <span id="headerModelTag" class="truncate">gpt-oss-20b</span>
+            <i data-lucide="chevron-down" class="w-3 h-3 ml-0.5 flex-shrink-0"></i>
           </button>
         </div>
       </div>
 
       <!-- Header Action Buttons -->
-      <div class="flex items-center space-x-2.5">
+      <div class="flex items-center space-x-1 sm:space-x-2.5 flex-shrink-0">
         
         <!-- Auth Header Pill: Sign In / User Profile -->
-        <div id="headerAuthContainer" class="flex items-center space-x-2">
+        <div id="headerAuthContainer" class="flex items-center space-x-1 sm:space-x-2">
           <!-- Injected dynamically: either Sign In button or User avatar pill -->
         </div>
 
-        <button id="clearChatBtn" title="Clear current chat" class="p-2 rounded-lg text-claude-lightSubtext dark:text-claude-darkSubtext hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition">
+        <button id="clearChatBtn" title="Clear current chat" class="p-2 rounded-xl text-claude-lightSubtext dark:text-claude-darkSubtext hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 active:scale-95 transition">
           <i data-lucide="trash-2" class="w-4 h-4"></i>
         </button>
 
-        <button id="topSettingsBtn" title="Settings" class="p-2 rounded-lg text-claude-lightSubtext dark:text-claude-darkSubtext hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition">
+        <button id="topSettingsBtn" title="Settings" class="p-2 rounded-xl text-claude-lightSubtext dark:text-claude-darkSubtext hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 active:scale-95 transition">
           <i data-lucide="settings" class="w-4 h-4"></i>
         </button>
       </div>
@@ -413,16 +455,16 @@
     </main>
 
     <!-- REAL CLAUDE FLOATING PROMPT DOCK -->
-    <div class="px-4 sm:px-6 pb-5 pt-2 flex-shrink-0 bg-gradient-to-t from-claude-warmIvory via-claude-warmIvory/90 to-transparent dark:from-claude-darkBg dark:via-claude-darkBg/90 dark:to-transparent">
+    <div class="px-2.5 sm:px-6 pb-2.5 sm:pb-5 pt-2 flex-shrink-0 bg-gradient-to-t from-claude-warmIvory via-claude-warmIvory/90 to-transparent dark:from-claude-darkBg dark:via-claude-darkBg/90 dark:to-transparent pb-safe">
       <div class="max-w-3xl mx-auto">
         
         <!-- Guest Chat Limit Notice Banner directly above input -->
         <div id="dockLimitBanner" class="hidden mb-2 px-3.5 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-700 dark:text-amber-300 text-xs flex items-center justify-between">
-          <div class="flex items-center space-x-2">
-            <i data-lucide="lock" class="w-4 h-4 text-amber-500"></i>
-            <span id="dockLimitBannerText">Free preview used (1/1 chat). Sign in to continue.</span>
+          <div class="flex items-center space-x-1.5 min-w-0 pr-2">
+            <i data-lucide="lock" class="w-3.5 h-3.5 text-amber-500 flex-shrink-0"></i>
+            <span id="dockLimitBannerText" class="truncate text-[11px] sm:text-xs">Free preview used (1/1 chat). Sign in to continue.</span>
           </div>
-          <button id="dockSignInBtn" class="px-3 py-1 rounded-xl bg-claude-terracotta hover:bg-claude-terracottaHover text-white font-medium text-xs shadow-xs transition">
+          <button id="dockSignInBtn" class="px-2.5 py-1 rounded-xl bg-claude-terracotta hover:bg-claude-terracottaHover text-white font-medium text-[11px] sm:text-xs shadow-xs transition flex-shrink-0 active:scale-95">
             Sign In with Google
           </button>
         </div>
@@ -430,42 +472,42 @@
         <div class="relative bg-white dark:bg-claude-darkCard rounded-3xl border border-claude-lightBorder dark:border-claude-darkBorder shadow-lg shadow-black/5 dark:shadow-black/25 focus-within:border-claude-terracotta dark:focus-within:border-claude-terracotta transition-all duration-150 p-2 sm:p-3" id="inputDockContainer">
           
           <!-- Active Mode Notice Pill inside Dock -->
-          <div id="modeStatusBanner" class="hidden mb-1.5 px-3 py-1.5 rounded-xl text-xs flex items-center justify-between border">
-            <span class="flex items-center space-x-1.5 font-medium" id="modeStatusText">
+          <div id="modeStatusBanner" class="hidden mb-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs flex items-center justify-between border">
+            <span class="flex items-center space-x-1.5 font-medium truncate pr-2 text-[11px] sm:text-xs" id="modeStatusText">
               <!-- Injected dynamically -->
             </span>
-            <button id="resetToDefaultChatBtn" class="hover:underline text-[11px] font-semibold">Exit to Chat</button>
+            <button id="resetToDefaultChatBtn" class="hover:underline text-[11px] font-semibold flex-shrink-0">Exit to Chat</button>
           </div>
 
-          <!-- Textarea -->
+          <!-- Textarea (16px text-base on mobile prevents iOS Safari page zoom) -->
           <textarea
             id="chatInput"
             rows="1"
-            placeholder="Reply to TriXAI... (Enter to send, Shift+Enter for new line)"
-            class="w-full bg-transparent px-3 pt-1 pb-11 text-sm focus:outline-none resize-none placeholder-claude-lightSubtext/70 dark:placeholder-claude-darkSubtext/70 text-[#1F1E1D] dark:text-[#EDEDE8] max-h-44"
+            placeholder="Reply to TriXAI..."
+            class="w-full bg-transparent px-3 pt-1 pb-11 text-base sm:text-sm focus:outline-none resize-none placeholder-claude-lightSubtext/70 dark:placeholder-claude-darkSubtext/70 text-[#1F1E1D] dark:text-[#EDEDE8] max-h-36 sm:max-h-44"
           ></textarea>
 
           <!-- Input Footer controls (Real Claude Style) -->
-          <div class="absolute bottom-2.5 left-3.5 right-3.5 flex items-center justify-between pointer-events-none">
+          <div class="absolute bottom-2 sm:bottom-2.5 left-2.5 sm:left-3.5 right-2.5 sm:right-3.5 flex items-center justify-between pointer-events-none">
             
-            <!-- Left Controls: Model pill + Mode Buttons -->
-            <div class="flex items-center space-x-1.5 pointer-events-auto flex-wrap">
+            <!-- Left Controls: Model pill + Mode Buttons (Horizontal smooth swipeable rail on mobile!) -->
+            <div class="flex items-center space-x-1.5 pointer-events-auto overflow-x-auto no-scrollbar max-w-[calc(100%-46px)] py-0.5 flex-nowrap">
               
               <!-- Model Switcher Pill -->
               <button 
                 id="modelBadgeBtn" 
-                class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-medium bg-[#F4F3ED] dark:bg-claude-darkHover text-claude-lightSubtext dark:text-claude-darkSubtext border border-claude-lightBorder dark:border-claude-darkBorder cursor-pointer hover:border-claude-terracotta hover:text-claude-terracotta transition"
+                class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-medium bg-[#F4F3ED] dark:bg-claude-darkHover text-claude-lightSubtext dark:text-claude-darkSubtext border border-claude-lightBorder dark:border-claude-darkBorder cursor-pointer hover:border-claude-terracotta hover:text-claude-terracotta transition flex-shrink-0 active:scale-95"
                 title="Change active model"
               >
                 <i data-lucide="cpu" class="w-3.5 h-3.5 text-claude-terracotta" id="modelBadgeIcon"></i>
-                <span id="activeModelLabel">gpt-oss-20b</span>
+                <span id="activeModelLabel" class="max-w-[70px] sm:max-w-none truncate">gpt-oss-20b</span>
                 <i data-lucide="chevron-down" class="w-3 h-3 text-claude-lightSubtext dark:text-claude-darkSubtext"></i>
               </button>
 
               <!-- Agent Mode Toggle Pill -->
               <button
                 id="toggleAgentModeBtn"
-                class="inline-flex items-center space-x-1 px-2 py-1 rounded-xl text-[11px] font-medium bg-[#F4F3ED] dark:bg-claude-darkHover text-claude-lightSubtext dark:text-claude-darkSubtext border border-claude-lightBorder dark:border-claude-darkBorder hover:border-amber-500 hover:text-amber-500 transition cursor-pointer"
+                class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-medium bg-[#F4F3ED] dark:bg-claude-darkHover text-claude-lightSubtext dark:text-claude-darkSubtext border border-claude-lightBorder dark:border-claude-darkBorder hover:border-amber-500 hover:text-amber-500 transition cursor-pointer flex-shrink-0 active:scale-95"
                 title="Autonomous Agent Mode: Multi-step planning & execution"
               >
                 <i data-lucide="bot" class="w-3.5 h-3.5 text-amber-500"></i>
@@ -475,7 +517,7 @@
               <!-- Image Mode Toggle Pill -->
               <button
                 id="toggleImageModeBtn"
-                class="inline-flex items-center space-x-1 px-2 py-1 rounded-xl text-[11px] font-medium bg-[#F4F3ED] dark:bg-claude-darkHover text-claude-lightSubtext dark:text-claude-darkSubtext border border-claude-lightBorder dark:border-claude-darkBorder hover:border-claude-terracotta hover:text-claude-terracotta transition cursor-pointer"
+                class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-medium bg-[#F4F3ED] dark:bg-claude-darkHover text-claude-lightSubtext dark:text-claude-darkSubtext border border-claude-lightBorder dark:border-claude-darkBorder hover:border-claude-terracotta hover:text-claude-terracotta transition cursor-pointer flex-shrink-0 active:scale-95"
                 title="Toggle Image Studio Mode"
               >
                 <i data-lucide="image" class="w-3.5 h-3.5 text-claude-terracotta"></i>
@@ -485,35 +527,35 @@
               <!-- Video Mode Toggle Pill -->
               <button
                 id="toggleVideoModeBtn"
-                class="inline-flex items-center space-x-1 px-2 py-1 rounded-xl text-[11px] font-medium bg-[#F4F3ED] dark:bg-claude-darkHover text-claude-lightSubtext dark:text-claude-darkSubtext border border-claude-lightBorder dark:border-claude-darkBorder hover:border-sky-500 hover:text-sky-500 transition cursor-pointer"
+                class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-medium bg-[#F4F3ED] dark:bg-claude-darkHover text-claude-lightSubtext dark:text-claude-darkSubtext border border-claude-lightBorder dark:border-claude-darkBorder hover:border-sky-500 hover:text-sky-500 transition cursor-pointer flex-shrink-0 active:scale-95"
                 title="Toggle Video Generation Mode"
               >
                 <i data-lucide="video" class="w-3.5 h-3.5 text-sky-500"></i>
                 <span id="videoModeBtnLabel">Video</span>
               </button>
 
-              <span id="guestBadgeCount" class="text-[11px] px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-claude-lightSubtext dark:text-claude-darkSubtext font-mono hidden md:inline">
+              <span id="guestBadgeCount" class="text-[11px] px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-claude-lightSubtext dark:text-claude-darkSubtext font-mono hidden md:inline flex-shrink-0">
                 1 free chat
               </span>
             </div>
 
             <!-- Right Controls: Send Button -->
-            <div class="flex items-center space-x-2 pointer-events-auto">
+            <div class="flex items-center space-x-1 pointer-events-auto flex-shrink-0">
               <button
                 id="sendMsgBtn"
-                class="w-8 h-8 rounded-full bg-claude-terracotta hover:bg-claude-terracottaHover text-white flex items-center justify-center shadow-sm disabled:opacity-30 disabled:cursor-not-allowed transition transform active:scale-95 cursor-pointer"
+                class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-claude-terracotta hover:bg-claude-terracottaHover text-white flex items-center justify-center shadow-sm disabled:opacity-30 disabled:cursor-not-allowed transition transform active:scale-90 cursor-pointer"
                 title="Send Message"
               >
-                <i data-lucide="arrow-up" class="w-4 h-4" id="sendBtnIcon"></i>
+                <i data-lucide="arrow-up" class="w-4 h-4 sm:w-4.5 sm:h-4.5" id="sendBtnIcon"></i>
               </button>
             </div>
           </div>
 
         </div>
 
-        <div class="flex items-center justify-between text-[11px] text-claude-lightSubtext/70 dark:text-claude-darkSubtext/70 mt-2 px-1">
+        <div class="flex items-center justify-between text-[10px] sm:text-[11px] text-claude-lightSubtext/70 dark:text-claude-darkSubtext/70 mt-1.5 sm:mt-2 px-1">
           <span>TriXAI by <a href="https://namithrn.vercel.app/" target="_blank" class="hover:text-claude-terracotta transition underline font-medium">Namithh.</a></span>
-          <span id="footerUsageStatus">Sign in with Google to save chat history</span>
+          <span id="footerUsageStatus" class="truncate max-w-[170px] sm:max-w-none">Sign in with Google to save history</span>
         </div>
       </div>
     </div>
@@ -521,8 +563,10 @@
   </div>
 
   <!-- AUTH MODAL (LOGIN & SIGNUP + GOOGLE AUTH) -->
-  <div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-200">
-    <div class="bg-white dark:bg-claude-darkCard border border-claude-lightBorder dark:border-claude-darkBorder w-full max-w-md mx-4 rounded-3xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200" id="authBox">
+  <div id="authModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/65 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-200 p-0 sm:p-4">
+    <div class="bg-white dark:bg-claude-darkCard border-t sm:border border-claude-lightBorder dark:border-claude-darkBorder w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200 pb-safe max-h-[92vh] flex flex-col" id="authBox">
+      <!-- Mobile Drag Handle -->
+      <div class="w-10 h-1 rounded-full bg-black/15 dark:bg-white/20 mx-auto mt-2.5 -mb-2 sm:hidden flex-shrink-0"></div>
       
       <!-- Modal Header -->
       <div class="px-6 pt-6 pb-4 flex items-center justify-between">
@@ -655,8 +699,9 @@
   </div>
 
   <!-- GOOGLE ACCOUNT SELECTOR POPUP SIMULATOR -->
-  <div id="googleAccountPickerModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-150">
-    <div class="bg-white dark:bg-[#202124] text-[#3c4043] dark:text-[#e8eaed] w-full max-w-sm mx-4 rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700 p-6 space-y-4">
+  <div id="googleAccountPickerModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-150 p-0 sm:p-4">
+    <div class="bg-white dark:bg-[#202124] text-[#3c4043] dark:text-[#e8eaed] w-full max-w-sm rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700 p-6 space-y-4 pb-safe">
+      <div class="w-10 h-1 rounded-full bg-black/15 dark:bg-white/20 mx-auto -mt-2 mb-2 sm:hidden"></div>
       <div class="flex items-center space-x-3 mb-2">
         <svg class="w-6 h-6" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -671,7 +716,7 @@
       </div>
 
       <div class="space-y-2">
-        <button id="googleAccountNamith" class="w-full flex items-center space-x-3 p-3 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition text-left">
+        <button id="googleAccountNamith" class="w-full flex items-center space-x-3 p-3 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition text-left active:scale-[0.98]">
           <img src="https://plain-apac-prod-public.komododecks.com/202610/10/xeNXT7AzxbFHHxMUAGbr/image.jpg" class="w-10 h-10 rounded-full object-cover" />
           <div class="min-w-0 flex-1">
             <p class="text-xs font-semibold text-gray-900 dark:text-white">Namithh.</p>
@@ -679,7 +724,7 @@
           </div>
         </button>
 
-        <button id="googleAccountCustom" class="w-full flex items-center space-x-3 p-3 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition text-left">
+        <button id="googleAccountCustom" class="w-full flex items-center space-x-3 p-3 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition text-left active:scale-[0.98]">
           <div class="w-10 h-10 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-sm">
             U
           </div>
@@ -691,21 +736,22 @@
       </div>
 
       <div class="flex justify-end pt-2">
-        <button id="closeGooglePickerBtn" class="text-xs text-gray-500 dark:text-gray-400 hover:underline">Cancel</button>
+        <button id="closeGooglePickerBtn" class="text-xs text-gray-500 dark:text-gray-400 hover:underline p-2">Cancel</button>
       </div>
     </div>
   </div>
 
   <!-- IN-CHAT MODEL SELECTOR MODAL / POPOVER -->
-  <div id="modelPickerModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-150">
-    <div class="bg-white dark:bg-claude-darkCard border border-claude-lightBorder dark:border-claude-darkBorder w-full max-w-sm mx-4 rounded-3xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-150" id="modelPickerBox">
+  <div id="modelPickerModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-150 p-0 sm:p-4">
+    <div class="bg-white dark:bg-claude-darkCard border-t sm:border border-claude-lightBorder dark:border-claude-darkBorder w-full max-w-sm rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-150 pb-safe max-h-[85vh] flex flex-col" id="modelPickerBox">
+      <div class="w-10 h-1 rounded-full bg-black/15 dark:bg-white/20 mx-auto mt-2.5 -mb-1 sm:hidden flex-shrink-0"></div>
       
       <div class="px-5 py-3.5 border-b border-claude-lightBorder dark:border-claude-darkBorder flex items-center justify-between">
         <div class="flex items-center space-x-2">
           <i data-lucide="cpu" class="w-4 h-4 text-claude-terracotta"></i>
           <span class="font-serif text-base font-semibold text-[#1F1E1D] dark:text-white">Switch Model in Chat</span>
         </div>
-        <button id="closeModelPickerBtn" class="p-1 rounded-lg text-claude-lightSubtext dark:text-claude-darkSubtext hover:bg-black/5 dark:hover:bg-white/5 transition">
+        <button id="closeModelPickerBtn" class="p-1.5 rounded-lg text-claude-lightSubtext dark:text-claude-darkSubtext hover:bg-black/5 dark:hover:bg-white/5 transition">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
@@ -749,8 +795,10 @@
   </div>
 
   <!-- SETTINGS MODAL -->
-  <div id="settingsModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-200">
-    <div class="bg-white dark:bg-claude-darkCard border border-claude-lightBorder dark:border-claude-darkBorder w-full max-w-md mx-4 rounded-3xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200" id="settingsBox">
+  <div id="settingsModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-200 p-0 sm:p-4">
+    <div class="bg-white dark:bg-claude-darkCard border-t sm:border border-claude-lightBorder dark:border-claude-darkBorder w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200 pb-safe max-h-[90vh] flex flex-col" id="settingsBox">
+      <!-- Mobile Drag Handle -->
+      <div class="w-10 h-1 rounded-full bg-black/15 dark:bg-white/20 mx-auto mt-2.5 -mb-2 sm:hidden flex-shrink-0"></div>
       
       <!-- Modal Header -->
       <div class="px-6 py-4 border-b border-claude-lightBorder dark:border-claude-darkBorder flex items-center justify-between">
@@ -2506,13 +2554,48 @@
     // MOBILE SIDEBAR
     function openSidebarMobile() {
       sidebar.classList.remove('-translate-x-full');
-      sidebarBackdrop.classList.remove('hidden');
+      sidebarBackdrop.classList.remove('hidden', 'pointer-events-none', 'opacity-0');
+      sidebarBackdrop.classList.add('opacity-100');
     }
 
     function closeSidebarMobile() {
       sidebar.classList.add('-translate-x-full');
-      sidebarBackdrop.classList.add('hidden');
+      sidebarBackdrop.classList.remove('opacity-100');
+      sidebarBackdrop.classList.add('opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        if (sidebarBackdrop.classList.contains('opacity-0')) {
+          sidebarBackdrop.classList.add('hidden');
+        }
+      }, 250);
     }
+
+    // MOBILE TOUCH SWIPE GESTURES
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    window.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].clientX;
+      touchStartY = e.changedTouches[0].clientY;
+    }, { passive: true });
+
+    window.addEventListener('touchend', (e) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+      const diffX = touchEndX - touchStartX;
+      const diffY = touchEndY - touchStartY;
+
+      // Only trigger when horizontal swipe is the dominant gesture
+      if (Math.abs(diffX) > 60 && Math.abs(diffX) > Math.abs(diffY) * 1.6) {
+        // Swipe right from left edge (within first 45px) opens sidebar
+        if (diffX > 0 && touchStartX < 45 && sidebar.classList.contains('-translate-x-full')) {
+          openSidebarMobile();
+        }
+        // Swipe left when sidebar is open closes it
+        else if (diffX < 0 && !sidebar.classList.contains('-translate-x-full')) {
+          closeSidebarMobile();
+        }
+      }
+    }, { passive: true });
 
     // EVENT LISTENERS
     function setupEventListeners() {
@@ -2569,7 +2652,17 @@
 
       // Settings triggers
       topSettingsBtn.addEventListener('click', openSettings);
-      sidebarSettingsBtn.addEventListener('click', openSettings);
+      sidebarSettingsBtn.addEventListener('click', () => {
+        closeSidebarMobile();
+        openSettings();
+      });
+      sidebarThemeBtn.addEventListener('click', () => {
+        const nextTheme = state.theme === 'dark' ? 'light' : 'dark';
+        applyTheme(nextTheme);
+        state.theme = nextTheme;
+        localStorage.setItem('trixai_theme', nextTheme);
+        showToast(`Switched to ${nextTheme === 'dark' ? 'Dark' : 'Light'} Mode`);
+      });
       closeSettingsModalBtn.addEventListener('click', closeSettings);
       cancelModalBtn.addEventListener('click', closeSettings);
       saveModalBtn.addEventListener('click', saveSettings);
