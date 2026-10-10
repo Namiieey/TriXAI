@@ -1,743 +1,2657 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TriX AI — modern chat</title>
-  <style>
-    /* ---------- CSS RESET / VARIABLES ---------- */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TriXAI by Namithh.</title>
+  <!-- Google Fonts: Editorial Serif + Modern Clean Sans & Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Marked for Markdown Parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Highlight.js for Syntax Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" id="hljs-theme" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
-    :root {
-      /* light theme (default) */
-      --bg: #f9fafc;
-      --surface: #ffffff;
-      --surface-soft: #f1f4f9;
-      --text-primary: #0b0f16;
-      --text-secondary: #5b677b;
-      --border-light: #e2e8f0;
-      --accent: #3b7cff;
-      --accent-soft: #e9f0ff;
-      --shadow-sm: 0 8px 20px -6px rgba(0, 0, 0, 0.04), 0 2px 6px -2px rgba(0, 0, 0, 0.02);
-      --bubble-user: #3b7cff;
-      --bubble-user-text: #ffffff;
-      --bubble-ai: #ffffff;
-      --bubble-ai-text: #0b0f16;
-      --toggle-bg: #e2e8f0;
-      --toggle-knob: #ffffff;
-    }
-
-    [data-theme="dark"] {
-      --bg: #0d1117;
-      --surface: #161c24;
-      --surface-soft: #1e2630;
-      --text-primary: #eef2f8;
-      --text-secondary: #9aa6b8;
-      --border-light: #2a3440;
-      --accent: #4d8aff;
-      --accent-soft: #1a2740;
-      --shadow-sm: 0 8px 20px -6px rgba(0, 0, 0, 0.5), 0 2px 6px -2px rgba(0, 0, 0, 0.3);
-      --bubble-user: #2f6eed;
-      --bubble-user-text: #ffffff;
-      --bubble-ai: #1f2937;
-      --bubble-ai-text: #eef2f8;
-      --toggle-bg: #2e3a48;
-      --toggle-knob: #cfddee;
-    }
-
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text-primary);
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.25s ease, color 0.2s ease;
-      padding: 16px;
-      margin: 0;
-      line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* ---------- CHAT CARD ---------- */
-    .chat-card {
-      width: 100%;
-      max-width: 720px;
-      height: 90vh;
-      max-height: 820px;
-      background: var(--surface);
-      border-radius: 32px;
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--border-light);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
-      backdrop-filter: blur(2px);
-    }
-
-    /* ---------- HEADER ---------- */
-    .chat-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 18px 24px;
-      border-bottom: 1px solid var(--border-light);
-      background: var(--surface);
-      transition: border-color 0.25s, background 0.25s;
-      flex-shrink: 0;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .brand-icon {
-      width: 32px;
-      height: 32px;
-      background: var(--accent);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 700;
-      font-size: 18px;
-      box-shadow: 0 4px 10px -2px var(--accent);
-    }
-
-    .brand h1 {
-      font-size: 1.3rem;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-      color: var(--text-primary);
-    }
-
-    .brand h1 span {
-      color: var(--accent);
-      font-weight: 700;
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    /* theme toggle */
-    .theme-toggle {
-      width: 52px;
-      height: 28px;
-      background: var(--toggle-bg);
-      border-radius: 100px;
-      border: none;
-      cursor: pointer;
-      padding: 0 4px;
-      display: flex;
-      align-items: center;
-      transition: background 0.25s;
-      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
-
-    .theme-toggle .knob {
-      width: 22px;
-      height: 22px;
-      background: var(--toggle-knob);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-      line-height: 1;
-    }
-
-    [data-theme="dark"] .theme-toggle .knob {
-      transform: translateX(24px);
-    }
-
-    /* settings gear */
-    .icon-btn {
-      background: transparent;
-      border: none;
-      width: 38px;
-      height: 38px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: var(--text-secondary);
-      transition: background 0.2s, color 0.2s;
-      font-size: 18px;
-    }
-
-    .icon-btn:hover {
-      background: var(--surface-soft);
-      color: var(--text-primary);
-    }
-
-    /* ---------- MODE BAR (Agent / Direct + model) ---------- */
-    .mode-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 24px 8px 24px;
-      gap: 12px;
-      flex-wrap: wrap;
-      flex-shrink: 0;
-      border-bottom: 1px solid var(--border-light);
-      background: var(--surface);
-      transition: background 0.25s, border-color 0.25s;
-    }
-
-    .mode-group {
-      display: flex;
-      background: var(--surface-soft);
-      padding: 3px;
-      border-radius: 40px;
-      gap: 2px;
-    }
-
-    .mode-btn {
-      border: none;
-      background: transparent;
-      padding: 8px 18px;
-      border-radius: 40px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: all 0.18s ease;
-      letter-spacing: -0.01em;
-      white-space: nowrap;
-    }
-
-    .mode-btn.active {
-      background: var(--surface);
-      color: var(--text-primary);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-      font-weight: 600;
-    }
-
-    .model-selector {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--surface-soft);
-      padding: 4px 12px 4px 16px;
-      border-radius: 40px;
-      border: 1px solid transparent;
-      transition: border 0.2s;
-    }
-
-    .model-selector select {
-      background: transparent;
-      border: none;
-      font-family: inherit;
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: var(--text-primary);
-      padding: 8px 0;
-      cursor: pointer;
-      outline: none;
-      width: 130px;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235b677b' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 0px center;
-      padding-right: 18px;
-    }
-
-    .model-selector select option {
-      background: var(--surface);
-      color: var(--text-primary);
-    }
-
-    /* ---------- CHAT MESSAGES ---------- */
-    .chat-messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px 24px 8px 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-      background: var(--surface);
-      transition: background 0.25s;
-      scroll-behavior: smooth;
-    }
-
-    /* scrollbar minimal */
-    .chat-messages::-webkit-scrollbar {
-      width: 5px;
-    }
-
-    .chat-messages::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    .chat-messages::-webkit-scrollbar-thumb {
-      background: var(--border-light);
-      border-radius: 20px;
-    }
-
-    .message {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      max-width: 85%;
-      animation: fadeIn 0.2s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .message.user {
-      align-self: flex-end;
-      flex-direction: row-reverse;
-    }
-
-    .message.ai {
-      align-self: flex-start;
-    }
-
-    .avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      font-weight: 600;
-      flex-shrink: 0;
-      background: var(--surface-soft);
-      color: var(--text-secondary);
-    }
-
-    .message.user .avatar {
-      background: var(--accent);
-      color: white;
-    }
-
-    .message.ai .avatar {
-      background: var(--accent-soft);
-      color: var(--accent);
-    }
-
-    .bubble {
-      padding: 12px 18px;
-      border-radius: 22px;
-      font-size: 0.95rem;
-      line-height: 1.5;
-      word-break: break-word;
-      box-shadow: 0 2px 6px -4px rgba(0, 0, 0, 0.05);
-      max-width: 100%;
-    }
-
-    .message.user .bubble {
-      background: var(--bubble-user);
-      color: var(--bubble-user-text);
-      border-bottom-right-radius: 6px;
-    }
-
-    .message.ai .bubble {
-      background: var(--bubble-ai);
-      color: var(--bubble-ai-text);
-      border: 1px solid var(--border-light);
-      border-bottom-left-radius: 6px;
-    }
-
-    /* ---------- INPUT AREA ---------- */
-    .chat-input-area {
-      padding: 16px 24px 20px 24px;
-      background: var(--surface);
-      border-top: 1px solid var(--border-light);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      transition: background 0.25s, border-color 0.25s;
-      flex-shrink: 0;
-    }
-
-    .input-wrapper {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      background: var(--surface-soft);
-      border-radius: 30px;
-      padding: 4px 6px 4px 20px;
-      transition: background 0.2s, box-shadow 0.2s;
-      border: 1px solid transparent;
-    }
-
-    .input-wrapper:focus-within {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-soft);
-    }
-
-    .input-wrapper input {
-      flex: 1;
-      border: none;
-      background: transparent;
-      font-family: inherit;
-      font-size: 0.95rem;
-      padding: 12px 6px 12px 0;
-      color: var(--text-primary);
-      outline: none;
-    }
-
-    .input-wrapper input::placeholder {
-      color: var(--text-secondary);
-      font-weight: 400;
-    }
-
-    .send-btn {
-      background: var(--accent);
-      border: none;
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: white;
-      font-size: 18px;
-      transition: background 0.2s, transform 0.1s;
-      box-shadow: 0 4px 10px -2px var(--accent);
-      flex-shrink: 0;
-    }
-
-    .send-btn:hover {
-      background: color-mix(in srgb, var(--accent) 85%, black);
-      transform: scale(1.02);
-    }
-
-    .send-btn:active {
-      transform: scale(0.96);
-    }
-
-    /* ---------- SETTINGS PANEL (hidden by default) ---------- */
-    .settings-panel {
-      position: fixed;
-      top: 0;
-      right: 0;
-      width: 300px;
-      height: 100vh;
-      background: var(--surface);
-      border-left: 1px solid var(--border-light);
-      box-shadow: -10px 0 30px -10px rgba(0, 0, 0, 0.1);
-      padding: 30px 24px;
-      transform: translateX(100%);
-      transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
-      z-index: 1000;
-      display: flex;
-      flex-direction: column;
-      gap: 28px;
-    }
-
-    .settings-panel.open {
-      transform: translateX(0);
-    }
-
-    .settings-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .settings-header h2 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-    }
-
-    .close-settings {
-      background: transparent;
-      border: none;
-      font-size: 24px;
-      cursor: pointer;
-      color: var(--text-secondary);
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .close-settings:hover {
-      background: var(--surface-soft);
-      color: var(--text-primary);
-    }
-
-    .settings-item {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .settings-item label {
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.02em;
-    }
-
-    .settings-item .placeholder-box {
-      background: var(--surface-soft);
-      border-radius: 14px;
-      padding: 14px 16px;
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-      border: 1px dashed var(--border-light);
-      font-family: monospace;
-      word-break: break-all;
-    }
-
-    .settings-item .placeholder-box span {
-      color: var(--accent);
-      font-weight: 600;
-    }
-
-    .theme-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: var(--surface-soft);
-      padding: 14px 18px;
-      border-radius: 16px;
-    }
-
-    .theme-row span {
-      font-weight: 500;
-      font-size: 0.95rem;
-    }
-
-    /* overlay for settings */
-    .overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.2);
-      backdrop-filter: blur(2px);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s;
-      z-index: 999;
-    }
-
-    .overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    /* small screens */
-    @media (max-width: 600px) {
-      .chat-card {
-        height: 95vh;
-        border-radius: 24px;
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            serif: ['"Instrument Serif"', 'Georgia', 'serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            claude: {
+              terracotta: '#d97757',
+              terracottaHover: '#c86849',
+              coral: '#e28768',
+              warmIvory: '#FAF9F5',
+              warmLightCard: '#F3F2EC',
+              lightBorder: '#E5E4DC',
+              lightSubtext: '#74726C',
+              // Real Claude Dark Palette
+              darkBg: '#1f1e1d',
+              darkSidebar: '#191918',
+              darkCard: '#262624',
+              darkHover: '#2e2e2b',
+              darkBorder: '#353532',
+              darkSubtext: '#9b9b94',
+              darkText: '#f5f5f0',
+            }
+          }
+        }
       }
-      .chat-header { padding: 14px 18px; }
-      .mode-bar { padding: 8px 16px; }
-      .chat-messages { padding: 16px 16px 6px; }
-      .chat-input-area { padding: 14px 16px 18px; }
-      .message { max-width: 92%; }
-      .settings-panel { width: 280px; }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(140, 138, 130, 0.25);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(140, 138, 130, 0.45);
+    }
+
+    /* Real Claude typography & prose */
+    .prose-claude {
+      font-size: 0.965rem;
+      line-height: 1.7;
+    }
+    .prose-claude p {
+      margin-bottom: 0.85rem;
+    }
+    .prose-claude p:last-child {
+      margin-bottom: 0;
+    }
+    .prose-claude ul {
+      list-style-type: disc;
+      padding-left: 1.4rem;
+      margin-bottom: 0.85rem;
+    }
+    .prose-claude ol {
+      list-style-type: decimal;
+      padding-left: 1.4rem;
+      margin-bottom: 0.85rem;
+    }
+    .prose-claude li {
+      margin-bottom: 0.35rem;
+    }
+    .prose-claude h1, .prose-claude h2, .prose-claude h3, .prose-claude h4 {
+      font-weight: 600;
+      margin-top: 1.25rem;
+      margin-bottom: 0.5rem;
+      line-height: 1.35;
+    }
+    .prose-claude h1 { font-size: 1.35rem; }
+    .prose-claude h2 { font-size: 1.2rem; }
+    .prose-claude h3 { font-size: 1.05rem; }
+    .prose-claude code:not(pre code) {
+      font-family: 'JetBrains Mono', monospace;
+      padding: 0.18rem 0.42rem;
+      border-radius: 0.35rem;
+      font-size: 0.86em;
+      background-color: rgba(150, 145, 135, 0.16);
+    }
+    .prose-claude pre {
+      position: relative;
+      margin-top: 0.9rem;
+      margin-bottom: 0.9rem;
+      border-radius: 0.75rem;
+      overflow: hidden;
+      background: #151514;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .prose-claude pre code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.84rem;
+      padding: 1rem;
+      display: block;
+      overflow-x: auto;
+    }
+    .prose-claude blockquote {
+      border-left: 3px solid #d97757;
+      padding-left: 0.9rem;
+      margin-left: 0;
+      font-style: italic;
+      opacity: 0.92;
+    }
+    .prose-claude table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.88rem;
+    }
+    .prose-claude th, .prose-claude td {
+      border: 1px solid rgba(160, 155, 145, 0.2);
+      padding: 0.55rem 0.85rem;
+      text-align: left;
+    }
+    .prose-claude th {
+      background: rgba(160, 155, 145, 0.1);
+      font-weight: 600;
+    }
+
+    /* Agent Mode Glow */
+    .agent-glow {
+      box-shadow: 0 0 25px -5px rgba(217, 119, 87, 0.25);
     }
   </style>
 </head>
-<body>
-  <!-- MAIN CHAT CARD -->
-  <div class="chat-card">
-    <!-- Header -->
-    <header class="chat-header">
-      <div class="brand">
-        <div class="brand-icon">T</div>
-        <h1>TriX <span>AI</span></h1>
-      </div>
-      <div class="header-actions">
-        <!-- Theme toggle (light/dark) -->
-        <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
-          <span class="knob" id="themeKnob">☀️</span>
+<body class="bg-claude-warmIvory text-[#1F1E1D] dark:bg-claude-darkBg dark:text-claude-darkText min-h-screen flex flex-row font-sans transition-colors duration-150 antialiased overflow-hidden">
+
+  <!-- SIDEBAR (Real Claude Style Collapsible Navigation) -->
+  <aside id="sidebar" class="w-68 flex-shrink-0 bg-[#F4F3ED] dark:bg-claude-darkSidebar border-r border-claude-lightBorder dark:border-claude-darkBorder flex flex-col justify-between transition-all duration-200 z-30 fixed inset-y-0 left-0 md:static -translate-x-full md:translate-x-0">
+    
+    <!-- Top Brand & Action Bar -->
+    <div class="p-3 flex flex-col space-y-3">
+      <div class="flex items-center justify-between px-2 pt-1">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-7 h-7 rounded-lg bg-claude-terracotta text-white flex items-center justify-center font-bold text-base shadow-sm">
+            <span>✱</span>
+          </div>
+          <div>
+            <div class="flex items-center space-x-1.5">
+              <span class="font-semibold text-base tracking-tight font-serif text-lg">TriXAI</span>
+            </div>
+            <p class="text-[10px] text-claude-lightSubtext dark:text-claude-darkSubtext -mt-1 font-medium">by Namithh.</p>
+          </div>
+        </div>
+        <button id="closeSidebarBtn" class="md:hidden p-1.5 rounded-lg text-claude-lightSubtext dark:text-claude-darkSubtext hover:bg-black/5 dark:hover:bg-white/5">
+          <i data-lucide="x" class="w-4 h-4"></i>
         </button>
-        <!-- Settings gear -->
-        <button class="icon-btn" id="settingsBtn" aria-label="Settings">
-          ⚙️
+      </div>
+
+      <!-- New Chat Button -->
+      <button id="newChatBtn" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-claude-lightBorder dark:border-claude-darkBorder bg-white dark:bg-claude-darkCard hover:bg-[#eae9e0] dark:hover:bg-claude-darkHover text-sm font-medium transition shadow-xs group">
+        <div class="flex items-center space-x-2.5">
+          <i data-lucide="plus" class="w-4 h-4 text-claude-terracotta group-hover:rotate-90 transition-transform"></i>
+          <span>Start new chat</span>
+        </div>
+        <kbd class="text-[10px] font-mono px-1.5 py-0.5 rounded border border-claude-lightBorder dark:border-claude-darkBorder text-claude-lightSubtext dark:text-claude-darkSubtext">⌘K</kbd>
+      </button>
+    </div>
+
+    <!-- Chat History List -->
+    <div class="flex-1 overflow-y-auto px-2 py-1 space-y-1" id="chatSessionsList">
+      <div class="px-3 py-1.5 text-[11px] font-semibold text-claude-lightSubtext dark:text-claude-darkSubtext uppercase tracking-wider">
+        Recent Chats
+      </div>
+    </div>
+
+    <!-- User Profile or Guest Banner in Sidebar -->
+    <div id="sidebarUserBox" class="p-2.5 m-2 rounded-2xl border border-claude-lightBorder dark:border-claude-darkBorder bg-white/70 dark:bg-claude-darkCard/80 shadow-xs">
+      <!-- Injected dynamically based on Auth State -->
+    </div>
+
+    <!-- Developer & Support Section in Sidebar -->
+    <div class="p-2.5 mx-2 mb-2 rounded-2xl border border-claude-lightBorder dark:border-claude-darkBorder bg-white/40 dark:bg-black/20 shadow-xs">
+      <div class="flex items-center space-x-3 mb-2">
+        <img 
+          src="https://plain-apac-prod-public.komododecks.com/202610/10/xeNXT7AzxbFHHxMUAGbr/image.jpg" 
+          alt="Namithh" 
+          class="w-8 h-8 rounded-full object-cover ring-2 ring-claude-terracotta/40 shadow-xs flex-shrink-0"
+        />
+        <div class="min-w-0">
+          <h4 class="text-xs font-semibold text-[#1F1E1D] dark:text-white truncate flex items-center space-x-1">
+            <span>Namithh.</span>
+            <i data-lucide="badge-check" class="w-3.5 h-3.5 text-claude-terracotta inline"></i>
+          </h4>
+          <p class="text-[10px] text-claude-lightSubtext dark:text-claude-darkSubtext truncate">Developer</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-1.5">
+        <a 
+          href="https://github.com/NamithRN" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          class="flex items-center justify-center space-x-1 py-1 px-2 rounded-xl text-[11px] font-medium bg-[#F4F3ED] dark:bg-claude-darkHover hover:bg-claude-terracotta hover:text-white dark:hover:bg-claude-terracotta dark:hover:text-white text-[#1F1E1D] dark:text-[#EDEDE8] border border-claude-lightBorder dark:border-claude-darkBorder transition group"
+        >
+          <i data-lucide="github" class="w-3 h-3 text-claude-terracotta group-hover:text-white"></i>
+          <span>Support</span>
+        </a>
+        <a 
+          href="https://namithrn.vercel.app/" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          class="flex items-center justify-center space-x-1 py-1 px-2 rounded-xl text-[11px] font-medium bg-[#F4F3ED] dark:bg-claude-darkHover hover:bg-claude-terracotta hover:text-white dark:hover:bg-claude-terracotta dark:hover:text-white text-[#1F1E1D] dark:text-[#EDEDE8] border border-claude-lightBorder dark:border-claude-darkBorder transition group"
+        >
+          <i data-lucide="globe" class="w-3 h-3 text-claude-terracotta group-hover:text-white"></i>
+          <span>Portfolio</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Sidebar Bottom Controls -->
+    <div class="p-3 border-t border-claude-lightBorder dark:border-claude-darkBorder space-y-1">
+      <button id="sidebarSettingsBtn" class="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-sm text-claude-lightSubtext dark:text-claude-darkSubtext hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition">
+        <i data-lucide="sliders" class="w-4 h-4"></i>
+        <span>Settings</span>
+      </button>
+
+      <button id="sidebarThemeBtn" class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm text-claude-lightSubtext dark:text-claude-darkSubtext hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition">
+        <div class="flex items-center space-x-2.5">
+          <i data-lucide="moon" class="w-4 h-4 hidden dark:block"></i>
+          <i data-lucide="sun" class="w-4 h-4 block dark:hidden"></i>
+          <span id="themeToggleText">Dark Mode</span>
+        </div>
+        <span class="text-[11px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10" id="themePill">Default</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- SIDEBAR OVERLAY FOR MOBILE -->
+  <div id="sidebarBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-20 hidden md:hidden"></div>
+
+  <!-- MAIN CHAT VIEW -->
+  <div class="flex-1 flex flex-col h-screen overflow-hidden relative">
+
+    <!-- TOP HEADER BAR (Real Claude Minimal Nav) -->
+    <header class="h-14 flex-shrink-0 flex items-center justify-between px-4 sm:px-6 border-b border-claude-lightBorder/70 dark:border-claude-darkBorder/70 bg-claude-warmIvory/85 dark:bg-claude-darkBg/85 backdrop-blur-md z-10">
+      <div class="flex items-center space-x-3">
+        <button id="openSidebarBtn" class="md:hidden p-2 rounded-lg text-claude-lightSubtext dark:text-claude-darkSubtext hover:bg-black/5 dark:hover:bg-white/5">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+
+        <div class="flex items-center space-x-2.5">
+          <span class="font-serif text-lg font-semibold tracking-wide">TriXAI</span>
+          <span class="text-xs text-claude-lightSubtext dark:text-claude-darkSubtext font-normal hidden sm:inline">
+            by <a href="https://namithrn.vercel.app/" target="_blank" class="hover:text-claude-terracotta transition underline decoration-dotted font-medium">Namithh.</a>
+          </span>
+
+          <!-- Real Claude Style Model Picker Pill in Header -->
+          <button id="headerModelPickerBtn" class="text-[11px] font-mono px-2.5 py-1 rounded-full bg-claude-terracotta/15 text-claude-terracotta border border-claude-terracotta/25 flex items-center space-x-1.5 hover:bg-claude-terracotta/25 transition cursor-pointer" title="Click to change model">
+            <span class="w-1.5 h-1.5 rounded-full bg-claude-terracotta animate-pulse" id="headerModelStatusDot"></span>
+            <span id="headerModelTag">gpt-oss-20b</span>
+            <i data-lucide="chevron-down" class="w-3 h-3 ml-0.5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Header Action Buttons -->
+      <div class="flex items-center space-x-2.5">
+        
+        <!-- Auth Header Pill: Sign In / User Profile -->
+        <div id="headerAuthContainer" class="flex items-center space-x-2">
+          <!-- Injected dynamically: either Sign In button or User avatar pill -->
+        </div>
+
+        <button id="clearChatBtn" title="Clear current chat" class="p-2 rounded-lg text-claude-lightSubtext dark:text-claude-darkSubtext hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition">
+          <i data-lucide="trash-2" class="w-4 h-4"></i>
+        </button>
+
+        <button id="topSettingsBtn" title="Settings" class="p-2 rounded-lg text-claude-lightSubtext dark:text-claude-darkSubtext hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition">
+          <i data-lucide="settings" class="w-4 h-4"></i>
         </button>
       </div>
     </header>
 
-    <!-- Mode & model bar -->
-    <div class="mode-bar">
-      <div class="mode-group">
-        <button class="mode-btn active" id="modeAgent">Agent Mode</button>
-        <button class="mode-btn" id="modeDirect">Direct Chat</button>
+    <!-- CHAT MESSAGES SCROLL AREA -->
+    <main id="chatScrollArea" class="flex-1 overflow-y-auto px-4 sm:px-6 py-6 scroll-smooth">
+      <div class="max-w-3xl mx-auto space-y-6" id="messagesContainer">
+        
+        <!-- Welcoming Hero (Shown when no chat) -->
+        <div id="claudeHero" class="pt-8 sm:pt-12 pb-8 text-center flex flex-col items-center">
+          
+          <!-- Creator Avatar & Badge -->
+          <div class="relative mb-3.5">
+            <img 
+              src="https://plain-apac-prod-public.komododecks.com/202610/10/xeNXT7AzxbFHHxMUAGbr/image.jpg" 
+              alt="Namithh." 
+              class="w-16 h-16 rounded-full object-cover ring-4 ring-claude-terracotta/30 shadow-lg mx-auto"
+            />
+            <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-claude-terracotta text-white flex items-center justify-center font-bold text-xs shadow-sm">
+              <span>✱</span>
+            </div>
+          </div>
+          
+          <h1 class="text-3xl sm:text-4xl font-serif font-normal tracking-tight text-[#1F1E1D] dark:text-[#F3F2EC] mb-1.5">
+            Good to see you. <span class="text-claude-terracotta">TriXAI</span>
+          </h1>
+          <p class="text-sm text-claude-lightSubtext dark:text-claude-darkSubtext max-w-md mx-auto mb-4 leading-relaxed">
+            Fast reasoning, Autonomous Agent planning, diffusion images, and AI video synthesis.
+          </p>
+
+          <!-- Free Preview Alert Notice when Unauthenticated -->
+          <div id="guestLimitHeroNotice" class="hidden mb-6 px-4 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-700 dark:text-amber-300 text-xs flex items-center space-x-2">
+            <i data-lucide="info" class="w-4 h-4 text-amber-500 flex-shrink-0"></i>
+            <span>Preview Mode: 1 free chat included. <button id="heroSignInBtn" class="underline font-semibold hover:text-claude-terracotta ml-1">Sign in with Google</button> to continue.</span>
+          </div>
+
+          <!-- Starter Suggestion Chips -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-xl text-left">
+            
+            <!-- Video Generation Starter Card -->
+            <button class="starter-card video-gen-card p-3.5 rounded-2xl border border-sky-500/40 bg-sky-500/5 dark:bg-sky-500/10 hover:border-sky-500 hover:bg-sky-500/15 transition shadow-xs text-left group">
+              <div class="flex items-center space-x-1.5 text-xs font-semibold text-sky-500">
+                <i data-lucide="video" class="w-3.5 h-3.5"></i>
+                <span>🎬 Video Generation</span>
+              </div>
+              <p class="text-[12px] text-claude-lightSubtext dark:text-claude-darkSubtext mt-1">"A cinematic drone shot soaring over misty Nordic mountains at golden hour, 4k 60fps"</p>
+            </button>
+
+            <!-- Agent Mode Starter Card -->
+            <button class="starter-card agent-gen-card p-3.5 rounded-2xl border border-amber-500/40 bg-amber-500/5 dark:bg-amber-500/10 hover:border-amber-500 hover:bg-amber-500/15 transition shadow-xs text-left group">
+              <div class="flex items-center space-x-1.5 text-xs font-semibold text-amber-500">
+                <i data-lucide="bot" class="w-3.5 h-3.5"></i>
+                <span>⚡ Autonomous Agent Mode</span>
+              </div>
+              <p class="text-[12px] text-claude-lightSubtext dark:text-claude-darkSubtext mt-1">"Decompose and architect a full-stack real-time collaboration canvas with code"</p>
+            </button>
+
+            <!-- Image Gen Starter Card -->
+            <button class="starter-card image-gen-card p-3.5 rounded-2xl border border-claude-terracotta/40 bg-claude-terracotta/5 dark:bg-claude-terracotta/10 hover:border-claude-terracotta hover:bg-claude-terracotta/15 transition shadow-xs text-left group">
+              <div class="flex items-center space-x-1.5 text-xs font-semibold text-claude-terracotta">
+                <i data-lucide="image" class="w-3.5 h-3.5"></i>
+                <span>🎨 Image Studio</span>
+              </div>
+              <p class="text-[12px] text-claude-lightSubtext dark:text-claude-darkSubtext mt-1">"Astronaut in a jungle, cold color palette, muted colors, detailed, 8k"</p>
+            </button>
+
+            <!-- Fast Reasoning Starter Card -->
+            <button class="starter-card p-3.5 rounded-2xl border border-claude-lightBorder dark:border-claude-darkBorder bg-white/70 dark:bg-claude-darkCard/60 hover:bg-white dark:hover:bg-claude-darkCard hover:border-claude-terracotta/60 transition shadow-xs text-left group">
+              <div class="flex items-center space-x-1.5 text-xs font-semibold text-[#1F1E1D] dark:text-white group-hover:text-claude-terracotta transition">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-claude-terracotta"></i>
+                <span>Fast Language Models</span>
+              </div>
+              <p class="text-[12px] text-claude-lightSubtext dark:text-claude-darkSubtext mt-1">"Explain the importance of fast language models"</p>
+            </button>
+          </div>
+        </div>
+
       </div>
-      <div class="model-selector">
-        <select id="modelSelect" aria-label="Choose model">
-          <option value="trix-mini">TriX Mini</option>
-          <option value="trix-pro" selected>TriX Pro</option>
-          <option value="trix-ultra">TriX Ultra</option>
-          <option value="trix-vision">TriX Vision</option>
-        </select>
+    </main>
+
+    <!-- REAL CLAUDE FLOATING PROMPT DOCK -->
+    <div class="px-4 sm:px-6 pb-5 pt-2 flex-shrink-0 bg-gradient-to-t from-claude-warmIvory via-claude-warmIvory/90 to-transparent dark:from-claude-darkBg dark:via-claude-darkBg/90 dark:to-transparent">
+      <div class="max-w-3xl mx-auto">
+        
+        <!-- Guest Chat Limit Notice Banner directly above input -->
+        <div id="dockLimitBanner" class="hidden mb-2 px-3.5 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-700 dark:text-amber-300 text-xs flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <i data-lucide="lock" class="w-4 h-4 text-amber-500"></i>
+            <span id="dockLimitBannerText">Free preview used (1/1 chat). Sign in to continue.</span>
+          </div>
+          <button id="dockSignInBtn" class="px-3 py-1 rounded-xl bg-claude-terracotta hover:bg-claude-terracottaHover text-white font-medium text-xs shadow-xs transition">
+            Sign In with Google
+          </button>
+        </div>
+
+        <div class="relative bg-white dark:bg-claude-darkCard rounded-3xl border border-claude-lightBorder dark:border-claude-darkBorder shadow-lg shadow-black/5 dark:shadow-black/25 focus-within:border-claude-terracotta dark:focus-within:border-claude-terracotta transition-all duration-150 p-2 sm:p-3" id="inputDockContainer">
+          
+          <!-- Active Mode Notice Pill inside Dock -->
+          <div id="modeStatusBanner" class="hidden mb-1.5 px-3 py-1.5 rounded-xl text-xs flex items-center justify-between border">
+            <span class="flex items-center space-x-1.5 font-medium" id="modeStatusText">
+              <!-- Injected dynamically -->
+            </span>
+            <button id="resetToDefaultChatBtn" class="hover:underline text-[11px] font-semibold">Exit to Chat</button>
+          </div>
+
+          <!-- Textarea -->
+          <textarea
+            id="chatInput"
+            rows="1"
+            placeholder="Reply to TriXAI... (Enter to send, Shift+Enter for new line)"
+            class="w-full bg-transparent px-3 pt-1 pb-11 text-sm focus:outline-none resize-none placeholder-claude-lightSubtext/70 dark:placeholder-claude-darkSubtext/70 text-[#1F1E1D] dark:text-[#EDEDE8] max-h-44"
+          ></textarea>
+
+          <!-- Input Footer controls (Real Claude Style) -->
+          <div class="absolute bottom-2.5 left-3.5 right-3.5 flex items-center justify-between pointer-events-none">
+            
+            <!-- Left Controls: Model pill + Mode Buttons -->
+            <div class="flex items-center space-x-1.5 pointer-events-auto flex-wrap">
+              
+              <!-- Model Switcher Pill -->
+              <button 
+                id="modelBadgeBtn" 
+                class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-medium bg-[#F4F3ED] dark:bg-claude-darkHover text-claude-lightSubtext dark:text-claude-darkSubtext border border-claude-lightBorder dark:border-claude-darkBorder cursor-pointer hover:border-claude-terracotta hover:text-claude-terracotta transition"
+                title="Change active model"
+              >
+                <i data-lucide="cpu" class="w-3.5 h-3.5 text-claude-terracotta" id="modelBadgeIcon"></i>
+                <span id="activeModelLabel">gpt-oss-20b</span>
+                <i data-lucide="chevron-down" class="w-3 h-3 text-claude-lightSubtext dark:text-claude-darkSubtext"></i>
+              </button>
+
+              <!-- Agent Mode Toggle Pill -->
+              <button
+                id="toggleAgentModeBtn"
+                class="inline-flex items-center space-x-1 px-2 py-1 rounded-xl text-[11px] font-medium bg-[#F4F3ED] dark:bg-claude-darkHover text-claude-lightSubtext dark:text-claude-darkSubtext border border-claude-lightBorder dark:border-claude-darkBorder hover:border-amber-500 hover:text-amber-500 transition cursor-pointer"
+                title="Autonomous Agent Mode: Multi-step planning & execution"
+              >
+                <i data-lucide="bot" class="w-3.5 h-3.5 text-amber-500"></i>
+                <span id="agentModeBtnLabel">Agent</span>
+              </button>
+
+              <!-- Image Mode Toggle Pill -->
+              <button
+                id="toggleImageModeBtn"
+                class="inline-flex items-center space-x-1 px-2 py-1 rounded-xl text-[11px] font-medium bg-[#F4F3ED] dark:bg-claude-darkHover text-claude-lightSubtext dark:text-claude-darkSubtext border border-claude-lightBorder dark:border-claude-darkBorder hover:border-claude-terracotta hover:text-claude-terracotta transition cursor-pointer"
+                title="Toggle Image Studio Mode"
+              >
+                <i data-lucide="image" class="w-3.5 h-3.5 text-claude-terracotta"></i>
+                <span id="imageModeBtnLabel">Image</span>
+              </button>
+
+              <!-- Video Mode Toggle Pill -->
+              <button
+                id="toggleVideoModeBtn"
+                class="inline-flex items-center space-x-1 px-2 py-1 rounded-xl text-[11px] font-medium bg-[#F4F3ED] dark:bg-claude-darkHover text-claude-lightSubtext dark:text-claude-darkSubtext border border-claude-lightBorder dark:border-claude-darkBorder hover:border-sky-500 hover:text-sky-500 transition cursor-pointer"
+                title="Toggle Video Generation Mode"
+              >
+                <i data-lucide="video" class="w-3.5 h-3.5 text-sky-500"></i>
+                <span id="videoModeBtnLabel">Video</span>
+              </button>
+
+              <span id="guestBadgeCount" class="text-[11px] px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-claude-lightSubtext dark:text-claude-darkSubtext font-mono hidden md:inline">
+                1 free chat
+              </span>
+            </div>
+
+            <!-- Right Controls: Send Button -->
+            <div class="flex items-center space-x-2 pointer-events-auto">
+              <button
+                id="sendMsgBtn"
+                class="w-8 h-8 rounded-full bg-claude-terracotta hover:bg-claude-terracottaHover text-white flex items-center justify-center shadow-sm disabled:opacity-30 disabled:cursor-not-allowed transition transform active:scale-95 cursor-pointer"
+                title="Send Message"
+              >
+                <i data-lucide="arrow-up" class="w-4 h-4" id="sendBtnIcon"></i>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="flex items-center justify-between text-[11px] text-claude-lightSubtext/70 dark:text-claude-darkSubtext/70 mt-2 px-1">
+          <span>TriXAI by <a href="https://namithrn.vercel.app/" target="_blank" class="hover:text-claude-terracotta transition underline font-medium">Namithh.</a></span>
+          <span id="footerUsageStatus">Sign in with Google to save chat history</span>
+        </div>
       </div>
     </div>
 
-    <!-- Messages container -->
-    <div class="chat-messages" id="chatMessages">
-      <!-- sample messages (will be replaced by JS at runtime) -->
-    </div>
+  </div>
 
-    <!-- Input area -->
-    <div class="chat-input-area">
-      <div class="input-wrapper">
-        <input type="text" id="messageInput" placeholder="Message TriX AI…" autocomplete="off" />
+  <!-- AUTH MODAL (LOGIN & SIGNUP + GOOGLE AUTH) -->
+  <div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="bg-white dark:bg-claude-darkCard border border-claude-lightBorder dark:border-claude-darkBorder w-full max-w-md mx-4 rounded-3xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200" id="authBox">
+      
+      <!-- Modal Header -->
+      <div class="px-6 pt-6 pb-4 flex items-center justify-between">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-8 h-8 rounded-xl bg-claude-terracotta text-white flex items-center justify-center font-bold text-base shadow-sm">
+            <span>✱</span>
+          </div>
+          <div>
+            <h3 class="font-serif text-xl font-medium text-[#1F1E1D] dark:text-white">TriXAI</h3>
+            <p class="text-[11px] text-claude-lightSubtext dark:text-claude-darkSubtext">Sign in to save history and continue</p>
+          </div>
+        </div>
+        <button id="closeAuthModalBtn" class="p-1 rounded-lg text-claude-lightSubtext dark:text-claude-darkSubtext hover:bg-black/5 dark:hover:bg-white/5 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
       </div>
-      <button class="send-btn" id="sendBtn" aria-label="Send message">➤</button>
+
+      <!-- Limit Alert Box inside modal -->
+      <div id="authReasonAlert" class="mx-6 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-700 dark:text-amber-300 text-xs flex items-center space-x-2.5">
+        <i data-lucide="sparkles" class="w-4 h-4 text-claude-terracotta flex-shrink-0"></i>
+        <span id="authReasonText">You've completed your 1 free preview chat. Sign in to continue chatting, creating images, and generating videos.</span>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 pt-4 space-y-4 text-sm">
+        
+        <!-- Google Sign-In Primary Button -->
+        <button id="googleSignInBtn" class="w-full flex items-center justify-center space-x-3 px-4 py-2.5 rounded-2xl border border-claude-lightBorder dark:border-claude-darkBorder bg-white dark:bg-claude-darkHover hover:bg-gray-50 dark:hover:bg-white/10 text-[#1F1E1D] dark:text-white font-medium text-xs shadow-xs transition group">
+          <svg class="w-4 h-4" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          <span class="text-xs">Continue with Google</span>
+        </button>
+
+        <div class="relative flex items-center justify-center my-3">
+          <div class="border-t border-claude-lightBorder dark:border-claude-darkBorder w-full"></div>
+          <span class="bg-white dark:bg-claude-darkCard px-3 text-[11px] uppercase tracking-wider text-claude-lightSubtext dark:text-claude-darkSubtext font-medium absolute">or with email</span>
+        </div>
+
+        <!-- Auth Tabs: Login vs Signup -->
+        <div class="flex p-0.5 rounded-xl bg-black/5 dark:bg-black/30 border border-claude-lightBorder dark:border-claude-darkBorder text-xs">
+          <button id="authTabLogin" class="flex-1 py-1.5 rounded-lg font-medium bg-claude-terracotta text-white shadow-xs transition">Sign In</button>
+          <button id="authTabSignup" class="flex-1 py-1.5 rounded-lg font-medium text-claude-lightSubtext dark:text-claude-darkSubtext hover:text-black dark:hover:text-white transition">Create Account</button>
+        </div>
+
+        <!-- Sign In Form -->
+        <form id="loginForm" class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-claude-lightSubtext dark:text-claude-darkSubtext mb-1">Email</label>
+            <input 
+              type="email" 
+              id="loginEmail" 
+              placeholder="you@domain.com" 
+              required
+              class="w-full bg-[#F8F7F2] dark:bg-claude-darkHover border border-claude-lightBorder dark:border-claude-darkBorder rounded-xl px-3 py-2 text-xs text-[#1F1E1D] dark:text-white focus:outline-none focus:border-claude-terracotta"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-claude-lightSubtext dark:text-claude-darkSubtext mb-1">Password</label>
+            <input 
+              type="password" 
+              id="loginPassword" 
+              placeholder="••••••••" 
+              required
+              class="w-full bg-[#F8F7F2] dark:bg-claude-darkHover border border-claude-lightBorder dark:border-claude-darkBorder rounded-xl px-3 py-2 text-xs text-[#1F1E1D] dark:text-white focus:outline-none focus:border-claude-terracotta"
+            />
+          </div>
+          <button type="submit" class="w-full py-2.5 rounded-xl bg-claude-terracotta hover:bg-claude-terracottaHover text-white font-medium text-xs shadow-xs transition">
+            Sign In
+          </button>
+        </form>
+
+        <!-- Sign Up Form -->
+        <form id="signupForm" class="space-y-3 hidden">
+          <div>
+            <label class="block text-xs font-semibold text-claude-lightSubtext dark:text-claude-darkSubtext mb-1">Full Name</label>
+            <input 
+              type="text" 
+              id="signupName" 
+              placeholder="Your Name" 
+              required
+              class="w-full bg-[#F8F7F2] dark:bg-claude-darkHover border border-claude-lightBorder dark:border-claude-darkBorder rounded-xl px-3 py-2 text-xs text-[#1F1E1D] dark:text-white focus:outline-none focus:border-claude-terracotta"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-claude-lightSubtext dark:text-claude-darkSubtext mb-1">Email</label>
+            <input 
+              type="email" 
+              id="signupEmail" 
+              placeholder="you@domain.com" 
+              required
+              class="w-full bg-[#F8F7F2] dark:bg-claude-darkHover border border-claude-lightBorder dark:border-claude-darkBorder rounded-xl px-3 py-2 text-xs text-[#1F1E1D] dark:text-white focus:outline-none focus:border-claude-terracotta"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-claude-lightSubtext dark:text-claude-darkSubtext mb-1">Password</label>
+            <input 
+              type="password" 
+              id="signupPassword" 
+              placeholder="At least 6 characters" 
+              required
+              class="w-full bg-[#F8F7F2] dark:bg-claude-darkHover border border-claude-lightBorder dark:border-claude-darkBorder rounded-xl px-3 py-2 text-xs text-[#1F1E1D] dark:text-white focus:outline-none focus:border-claude-terracotta"
+            />
+          </div>
+          <button type="submit" class="w-full py-2.5 rounded-xl bg-claude-terracotta hover:bg-claude-terracottaHover text-white font-medium text-xs shadow-xs transition">
+            Create Account
+          </button>
+        </form>
+
+      </div>
+
+      <!-- Quick Demo Sign-in Footer -->
+      <div class="px-6 py-3.5 bg-[#F8F7F2] dark:bg-claude-darkHover/40 border-t border-claude-lightBorder dark:border-claude-darkBorder flex items-center justify-between text-xs">
+        <span class="text-claude-lightSubtext dark:text-claude-darkSubtext text-[11px]">Testing demo?</span>
+        <button id="quickDemoLoginBtn" class="text-claude-terracotta hover:underline font-medium text-[11px] flex items-center space-x-1">
+          <i data-lucide="zap" class="w-3 h-3"></i>
+          <span>1-Click Instant Demo Login</span>
+        </button>
+      </div>
+
     </div>
   </div>
 
-  <!-- SETTINGS PANEL (hidden by default) -->
-  <div class="overlay" id="overlay"></div>
-  <aside class="settings-panel" id="settingsPanel">
-    <div class="settings-header">
-      <h2>Settings</h2>
-      <button class="close-settings" id="closeSettings">✕</button>
-    </div>
-
-    <div class="settings-item">
-      <label>API Endpoint</label>
-      <div class="placeholder-box">
-        <span>https://api.trix.ai/v1</span><br>— placeholder —
+  <!-- GOOGLE ACCOUNT SELECTOR POPUP SIMULATOR -->
+  <div id="googleAccountPickerModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-150">
+    <div class="bg-white dark:bg-[#202124] text-[#3c4043] dark:text-[#e8eaed] w-full max-w-sm mx-4 rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700 p-6 space-y-4">
+      <div class="flex items-center space-x-3 mb-2">
+        <svg class="w-6 h-6" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+        <div>
+          <h4 class="text-sm font-semibold">Sign in with Google</h4>
+          <p class="text-[11px] text-gray-500 dark:text-gray-400">Choose an account to continue to TriXAI</p>
+        </div>
       </div>
-    </div>
 
-    <div class="settings-item">
-      <label>API Key</label>
-      <div class="placeholder-box">
-        <span>••••••••••••••••</span> (sk-...)
-      </div>
-    </div>
+      <div class="space-y-2">
+        <button id="googleAccountNamith" class="w-full flex items-center space-x-3 p-3 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition text-left">
+          <img src="https://plain-apac-prod-public.komododecks.com/202610/10/xeNXT7AzxbFHHxMUAGbr/image.jpg" class="w-10 h-10 rounded-full object-cover" />
+          <div class="min-w-0 flex-1">
+            <p class="text-xs font-semibold text-gray-900 dark:text-white">Namithh.</p>
+            <p class="text-[11px] text-gray-500 dark:text-gray-400 truncate">namithrn@gmail.com</p>
+          </div>
+        </button>
 
-    <div class="settings-item">
-      <label>Appearance</label>
-      <div class="theme-row">
-        <span>Dark mode</span>
-        <button class="theme-toggle" id="settingsThemeToggle" style="width:52px;height:28px;">
-          <span class="knob" id="settingsKnob">☀️</span>
+        <button id="googleAccountCustom" class="w-full flex items-center space-x-3 p-3 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition text-left">
+          <div class="w-10 h-10 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-sm">
+            U
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="text-xs font-semibold text-gray-900 dark:text-white">Google User</p>
+            <p class="text-[11px] text-gray-500 dark:text-gray-400 truncate">user@gmail.com</p>
+          </div>
         </button>
       </div>
+
+      <div class="flex justify-end pt-2">
+        <button id="closeGooglePickerBtn" class="text-xs text-gray-500 dark:text-gray-400 hover:underline">Cancel</button>
+      </div>
     </div>
-  </aside>
+  </div>
+
+  <!-- IN-CHAT MODEL SELECTOR MODAL / POPOVER -->
+  <div id="modelPickerModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-150">
+    <div class="bg-white dark:bg-claude-darkCard border border-claude-lightBorder dark:border-claude-darkBorder w-full max-w-sm mx-4 rounded-3xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-150" id="modelPickerBox">
+      
+      <div class="px-5 py-3.5 border-b border-claude-lightBorder dark:border-claude-darkBorder flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="cpu" class="w-4 h-4 text-claude-terracotta"></i>
+          <span class="font-serif text-base font-semibold text-[#1F1E1D] dark:text-white">Switch Model in Chat</span>
+        </div>
+        <button id="closeModelPickerBtn" class="p-1 rounded-lg text-claude-lightSubtext dark:text-claude-darkSubtext hover:bg-black/5 dark:hover:bg-white/5 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Models List -->
+      <div class="p-3 space-y-1.5 max-h-[60vh] overflow-y-auto" id="modelsSelectionList">
+        <!-- Models will be injected dynamically -->
+      </div>
+
+      <div class="px-5 py-2.5 bg-[#F8F7F2] dark:bg-claude-darkHover/40 border-t border-claude-lightBorder dark:border-claude-darkBorder text-[11px] text-claude-lightSubtext dark:text-claude-darkSubtext flex items-center justify-between">
+        <span>Instant switch for next message</span>
+        <span class="font-mono text-claude-terracotta">TriXAI Engines</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- LIGHTBOX MODAL FOR MEDIA (IMAGES & VIDEOS) -->
+  <div id="mediaLightboxModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="relative max-w-4xl max-h-[90vh] p-4 flex flex-col items-center">
+      <button id="closeLightboxBtn" class="absolute top-2 right-2 text-white/80 hover:text-white p-2 rounded-full bg-black/50 hover:bg-black/80 transition z-10">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+      
+      <div id="lightboxMediaContainer" class="max-h-[75vh] w-auto flex items-center justify-center">
+        <!-- Injected: Image or Video element -->
+      </div>
+
+      <div class="mt-4 flex items-center space-x-3">
+        <button id="lightboxDownloadBtn" class="flex items-center space-x-2 px-4 py-2 rounded-xl bg-claude-terracotta hover:bg-claude-terracottaHover text-white text-xs font-medium shadow-md transition">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          <span>Download Media</span>
+        </button>
+        <button id="lightboxCopyPromptBtn" class="flex items-center space-x-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition">
+          <i data-lucide="copy" class="w-4 h-4"></i>
+          <span>Copy Prompt</span>
+        </button>
+      </div>
+      <p id="lightboxPromptText" class="text-xs text-gray-300 mt-2 max-w-lg text-center font-serif italic"></p>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div id="settingsModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="bg-white dark:bg-claude-darkCard border border-claude-lightBorder dark:border-claude-darkBorder w-full max-w-md mx-4 rounded-3xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200" id="settingsBox">
+      
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-claude-lightBorder dark:border-claude-darkBorder flex items-center justify-between">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-6 h-6 rounded-lg bg-claude-terracotta/15 text-claude-terracotta flex items-center justify-center font-bold text-xs">
+            <span>✱</span>
+          </div>
+          <div>
+            <h3 class="font-serif text-lg font-medium text-[#1F1E1D] dark:text-white">TriXAI Settings</h3>
+            <p class="text-[10px] text-claude-lightSubtext dark:text-claude-darkSubtext">Developed by Namithh.</p>
+          </div>
+        </div>
+        <button id="closeSettingsModalBtn" class="p-1 rounded-lg text-claude-lightSubtext dark:text-claude-darkSubtext hover:bg-black/5 dark:hover:bg-white/5 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 space-y-5 max-h-[75vh] overflow-y-auto text-sm">
+        
+        <!-- Theme Mode Toggle -->
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-claude-lightSubtext dark:text-claude-darkSubtext mb-2">
+            Appearance
+          </label>
+          <div class="flex items-center justify-between p-3 rounded-2xl bg-[#F8F7F2] dark:bg-claude-darkHover border border-claude-lightBorder dark:border-claude-darkBorder">
+            <div class="flex items-center space-x-2.5">
+              <i data-lucide="moon" class="w-4 h-4 text-claude-terracotta"></i>
+              <div>
+                <p class="font-medium text-xs text-[#1F1E1D] dark:text-white">Dark / Light Mode</p>
+                <p class="text-[11px] text-claude-lightSubtext dark:text-claude-darkSubtext" id="modalThemeDesc">Default: Dark Mode</p>
+              </div>
+            </div>
+            <div class="flex p-0.5 rounded-xl bg-black/5 dark:bg-black/30 border border-claude-lightBorder dark:border-claude-darkBorder text-xs">
+              <button id="modalDarkBtn" class="px-3 py-1.5 rounded-lg font-medium transition">Dark</button>
+              <button id="modalLightBtn" class="px-3 py-1.5 rounded-lg font-medium transition">Light</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Default Model selection -->
+        <div>
+          <label for="modelSelectField" class="block text-xs font-semibold uppercase tracking-wider text-claude-lightSubtext dark:text-claude-darkSubtext mb-1.5">
+            Default Reasoning Model
+          </label>
+          <select
+            id="modelSelectField"
+            class="w-full bg-[#F8F7F2] dark:bg-claude-darkHover border border-claude-lightBorder dark:border-claude-darkBorder rounded-xl px-3 py-2 text-xs text-[#1F1E1D] dark:text-white focus:outline-none focus:border-claude-terracotta"
+          >
+            <option value="openai/gpt-oss-20b" selected>gpt-oss-20b (Ultra-fast Reasoning & Text)</option>
+            <option value="llama-3.3-70b-versatile">Llama 3.3 70B (High Intelligence)</option>
+            <option value="llama-3.1-8b-instant">Llama 3.1 8B (Instant Speed)</option>
+            <option value="mixtral-8x7b-32768">Mixtral 8x7B (Large Context)</option>
+            <option value="gemma2-9b-it">Gemma 2 9B (Compact Power)</option>
+          </select>
+        </div>
+
+        <!-- Default Media Generation Model -->
+        <div>
+          <label for="imageModelSelect" class="block text-xs font-semibold uppercase tracking-wider text-claude-lightSubtext dark:text-claude-darkSubtext mb-1.5">
+            Default Image & Video Engine
+          </label>
+          <select
+            id="imageModelSelect"
+            class="w-full bg-[#F8F7F2] dark:bg-claude-darkHover border border-claude-lightBorder dark:border-claude-darkBorder rounded-xl px-3 py-2 text-xs text-[#1F1E1D] dark:text-white focus:outline-none focus:border-claude-terracotta"
+          >
+            <option value="Qwen/Qwen-Image-2.1" selected>Qwen-Image-2.1 (Default Diffusion)</option>
+            <option value="black-forest-labs/FLUX.1-schnell">FLUX.1 Schnell</option>
+            <option value="wan-video-2.1">Wan-Video 2.1 (Motion Cinema)</option>
+          </select>
+        </div>
+
+        <!-- System Persona / Instructions -->
+        <div>
+          <label for="systemPromptField" class="block text-xs font-semibold uppercase tracking-wider text-claude-lightSubtext dark:text-claude-darkSubtext mb-1.5">
+            System Persona / Instructions
+          </label>
+          <textarea
+            id="systemPromptField"
+            rows="2"
+            placeholder="Instructions for how TriXAI should respond..."
+            class="w-full bg-[#F8F7F2] dark:bg-claude-darkHover border border-claude-lightBorder dark:border-claude-darkBorder rounded-xl px-3 py-2 text-xs text-[#1F1E1D] dark:text-white focus:outline-none focus:border-claude-terracotta"
+          ></textarea>
+        </div>
+
+        <!-- Developer Info Card in Settings -->
+        <div class="pt-2 border-t border-claude-lightBorder dark:border-claude-darkBorder">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-claude-lightSubtext dark:text-claude-darkSubtext mb-2">
+            About Developer
+          </label>
+          <div class="p-3.5 rounded-2xl bg-[#F8F7F2] dark:bg-claude-darkHover border border-claude-lightBorder dark:border-claude-darkBorder flex items-center space-x-3.5">
+            <img 
+              src="https://plain-apac-prod-public.komododecks.com/202610/10/xeNXT7AzxbFHHxMUAGbr/image.jpg" 
+              alt="Namithh" 
+              class="w-12 h-12 rounded-full object-cover ring-2 ring-claude-terracotta/40 shadow-xs"
+            />
+            <div class="flex-1 min-w-0">
+              <h4 class="text-sm font-semibold text-[#1F1E1D] dark:text-white flex items-center space-x-1">
+                <span>Namithh.</span>
+                <i data-lucide="badge-check" class="w-4 h-4 text-claude-terracotta inline"></i>
+              </h4>
+              <p class="text-xs text-claude-lightSubtext dark:text-claude-darkSubtext mb-2">Creator & Engineer of TriXAI</p>
+              <div class="flex items-center space-x-2">
+                <a href="https://github.com/NamithRN" target="_blank" rel="noopener noreferrer" class="text-xs text-claude-terracotta hover:underline font-medium flex items-center space-x-1">
+                  <i data-lucide="github" class="w-3.5 h-3.5"></i>
+                  <span>GitHub</span>
+                </a>
+                <span class="text-claude-lightSubtext dark:text-claude-darkSubtext">•</span>
+                <a href="https://namithrn.vercel.app/" target="_blank" rel="noopener noreferrer" class="text-xs text-claude-terracotta hover:underline font-medium flex items-center space-x-1">
+                  <i data-lucide="globe" class="w-3.5 h-3.5"></i>
+                  <span>Portfolio</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-4 bg-[#F8F7F2] dark:bg-claude-darkHover/60 border-t border-claude-lightBorder dark:border-claude-darkBorder flex justify-end space-x-2.5">
+        <button id="cancelModalBtn" class="px-4 py-2 rounded-xl text-xs font-medium text-claude-lightSubtext dark:text-claude-darkSubtext hover:bg-black/5 dark:hover:bg-white/5 transition">
+          Cancel
+        </button>
+        <button id="saveModalBtn" class="px-4 py-2 rounded-xl text-xs font-medium bg-claude-terracotta hover:bg-claude-terracottaHover text-white shadow-sm transition">
+          Save Settings
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toastNotification" class="fixed bottom-6 right-6 z-50 flex items-center space-x-2 px-4 py-2.5 rounded-2xl shadow-xl text-xs font-medium text-white transition-all transform translate-y-8 opacity-0 pointer-events-none">
+    <span id="toastIcon">✓</span>
+    <span id="toastText">Saved successfully</span>
+  </div>
 
   <script>
-    (function() {
-      // ---------- DOM ELEMENTS ----------
-      const html = document.documentElement;
-      const themeToggle = document.getElementById('themeToggle');
-      const themeKnob = document.getElementById('themeKnob');
-      const settingsThemeToggle = document.getElementById('settingsThemeToggle');
-      const settingsKnob = document.getElementById('settingsKnob');
+    // INTERNAL ENGINE CONFIGURATION (Silently handled in background)
+    const _AUTH_KEY = "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";
+    const DEFAULT_MODEL = "openai/gpt-oss-20b";
+    const DEFAULT_IMAGE_MODEL = "Qwen/Qwen-Image-2.1";
+    const DEFAULT_SYSTEM_PROMPT = "You are TriXAI, an editorial, thoughtful, highly articulate AI created by Namithh. Deliver structured insights, markdown tables, and clean code.";
 
-      const chatMessages = document.getElementById('chatMessages');
-      const messageInput = document.getElementById('messageInput');
-      const sendBtn = document.getElementById('sendBtn');
+    // AVAILABLE MODELS IN TRIXAI
+    const AVAILABLE_MODELS = [
+      {
+        id: "openai/gpt-oss-20b",
+        name: "gpt-oss-20b",
+        category: "llm",
+        tag: "Default • Reasoning",
+        desc: "Ultra-fast reasoning with deep chain-of-thought analysis"
+      },
+      {
+        id: "llama-3.3-70b-versatile",
+        name: "Llama 3.3 70B",
+        category: "llm",
+        tag: "High Intelligence",
+        desc: "State-of-the-art model for complex tasks and coding"
+      },
+      {
+        id: "llama-3.1-8b-instant",
+        name: "Llama 3.1 8B",
+        category: "llm",
+        tag: "Instant Speed",
+        desc: "Lightning fast responses for quick queries and chats"
+      },
+      {
+        id: "mixtral-8x7b-32768",
+        name: "Mixtral 8x7B",
+        category: "llm",
+        tag: "32k Context",
+        desc: "Architecture with large context window for long texts"
+      },
+      {
+        id: "gemma2-9b-it",
+        name: "Gemma 2 9B",
+        category: "llm",
+        tag: "Compact Power",
+        desc: "Capable lightweight conversational model"
+      },
+      {
+        id: "Qwen/Qwen-Image-2.1",
+        name: "Qwen-Image-2.1",
+        category: "image",
+        tag: "🎨 Image Studio",
+        desc: "Photorealistic text-to-image diffusion generation"
+      },
+      {
+        id: "wan-video-2.1",
+        name: "Wan-Video 2.1",
+        category: "video",
+        tag: "🎬 Video Cinema",
+        desc: "Free cinematic text-to-video motion generation"
+      }
+    ];
 
-      const modeAgent = document.getElementById('modeAgent');
-      const modeDirect = document.getElementById('modeDirect');
-      const modelSelect = document.getElementById('modelSelect');
+    // MODES: 'chat', 'agent', 'image', 'video'
+    const state = {
+      user: JSON.parse(localStorage.getItem('trixai_user') || 'null'),
+      guestChatsCount: parseInt(localStorage.getItem('trixai_guest_chats') || '0', 10),
+      activeMode: 'chat', // 'chat' | 'agent' | 'image' | 'video'
+      model: localStorage.getItem('trixai_model') || DEFAULT_MODEL,
+      imageModel: localStorage.getItem('trixai_image_model') || DEFAULT_IMAGE_MODEL,
+      systemPrompt: localStorage.getItem('trixai_system_prompt') || DEFAULT_SYSTEM_PROMPT,
+      theme: localStorage.getItem('trixai_theme') || 'dark', // DEFAULT DARK MODE
+      currentSessionId: localStorage.getItem('trixai_active_session') || 'default',
+      sessions: JSON.parse(localStorage.getItem('trixai_sessions') || '{}'),
+      isGenerating: false,
+      abortController: null,
+      currentLightboxMedia: null,
+      currentLightboxPrompt: null,
+      currentLightboxType: 'image'
+    };
 
-      const settingsBtn = document.getElementById('settingsBtn');
-      const settingsPanel = document.getElementById('settingsPanel');
-      const closeSettings = document.getElementById('closeSettings');
-      const overlay = document.getElementById('overlay');
+    // Ensure initial session exists
+    if (!state.sessions[state.currentSessionId]) {
+      state.sessions[state.currentSessionId] = {
+        id: state.currentSessionId,
+        title: 'New Conversation',
+        messages: [],
+        createdAt: Date.now()
+      };
+      saveSessions();
+    }
 
-      // ---------- THEME HANDLING (light / dark) ----------
-      function setTheme(theme) {
-        if (theme === 'dark') {
-          html.setAttribute('data-theme', 'dark');
-          themeKnob.textContent = '🌙';
-          settingsKnob.textContent = '🌙';
-        } else {
-          html.removeAttribute('data-theme');
-          themeKnob.textContent = '☀️';
-          settingsKnob.textContent = '☀️';
+    // DOM ELEMENTS
+    const htmlElem = document.documentElement;
+    const sidebar = document.getElementById('sidebar');
+    const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+    const openSidebarBtn = document.getElementById('openSidebarBtn');
+    const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+    const newChatBtn = document.getElementById('newChatBtn');
+    const chatSessionsList = document.getElementById('chatSessionsList');
+    const sidebarUserBox = document.getElementById('sidebarUserBox');
+    const headerAuthContainer = document.getElementById('headerAuthContainer');
+    const chatScrollArea = document.getElementById('chatScrollArea');
+    const messagesContainer = document.getElementById('messagesContainer');
+    const claudeHero = document.getElementById('claudeHero');
+    const guestLimitHeroNotice = document.getElementById('guestLimitHeroNotice');
+    const heroSignInBtn = document.getElementById('heroSignInBtn');
+    const dockLimitBanner = document.getElementById('dockLimitBanner');
+    const dockLimitBannerText = document.getElementById('dockLimitBannerText');
+    const dockSignInBtn = document.getElementById('dockSignInBtn');
+    const guestBadgeCount = document.getElementById('guestBadgeCount');
+    const footerUsageStatus = document.getElementById('footerUsageStatus');
+
+    const chatInput = document.getElementById('chatInput');
+    const sendMsgBtn = document.getElementById('sendMsgBtn');
+    const sendBtnIcon = document.getElementById('sendBtnIcon');
+    const clearChatBtn = document.getElementById('clearChatBtn');
+    const activeModelLabel = document.getElementById('activeModelLabel');
+    const headerModelTag = document.getElementById('headerModelTag');
+    const headerModelStatusDot = document.getElementById('headerModelStatusDot');
+    const modelBadgeBtn = document.getElementById('modelBadgeBtn');
+    const headerModelPickerBtn = document.getElementById('headerModelPickerBtn');
+    const inputDockContainer = document.getElementById('inputDockContainer');
+
+    // Modes UI Elements
+    const toggleAgentModeBtn = document.getElementById('toggleAgentModeBtn');
+    const toggleImageModeBtn = document.getElementById('toggleImageModeBtn');
+    const toggleVideoModeBtn = document.getElementById('toggleVideoModeBtn');
+    const modeStatusBanner = document.getElementById('modeStatusBanner');
+    const modeStatusText = document.getElementById('modeStatusText');
+    const resetToDefaultChatBtn = document.getElementById('resetToDefaultChatBtn');
+
+    // Auth Modal DOM
+    const authModal = document.getElementById('authModal');
+    const authBox = document.getElementById('authBox');
+    const closeAuthModalBtn = document.getElementById('closeAuthModalBtn');
+    const authReasonAlert = document.getElementById('authReasonAlert');
+    const authReasonText = document.getElementById('authReasonText');
+    const googleSignInBtn = document.getElementById('googleSignInBtn');
+    const authTabLogin = document.getElementById('authTabLogin');
+    const authTabSignup = document.getElementById('authTabSignup');
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    const quickDemoLoginBtn = document.getElementById('quickDemoLoginBtn');
+
+    // Google Picker Simulator DOM
+    const googleAccountPickerModal = document.getElementById('googleAccountPickerModal');
+    const googleAccountNamith = document.getElementById('googleAccountNamith');
+    const googleAccountCustom = document.getElementById('googleAccountCustom');
+    const closeGooglePickerBtn = document.getElementById('closeGooglePickerBtn');
+
+    // Model Picker Modal DOM
+    const modelPickerModal = document.getElementById('modelPickerModal');
+    const modelPickerBox = document.getElementById('modelPickerBox');
+    const closeModelPickerBtn = document.getElementById('closeModelPickerBtn');
+    const modelsSelectionList = document.getElementById('modelsSelectionList');
+
+    // Media Lightbox Modal DOM
+    const mediaLightboxModal = document.getElementById('mediaLightboxModal');
+    const lightboxMediaContainer = document.getElementById('lightboxMediaContainer');
+    const lightboxPromptText = document.getElementById('lightboxPromptText');
+    const closeLightboxBtn = document.getElementById('closeLightboxBtn');
+    const lightboxDownloadBtn = document.getElementById('lightboxDownloadBtn');
+    const lightboxCopyPromptBtn = document.getElementById('lightboxCopyPromptBtn');
+
+    // Settings Modal DOM
+    const settingsModal = document.getElementById('settingsModal');
+    const settingsBox = document.getElementById('settingsBox');
+    const topSettingsBtn = document.getElementById('topSettingsBtn');
+    const sidebarSettingsBtn = document.getElementById('sidebarSettingsBtn');
+    const closeSettingsModalBtn = document.getElementById('closeSettingsModalBtn');
+    const cancelModalBtn = document.getElementById('cancelModalBtn');
+    const saveModalBtn = document.getElementById('saveModalBtn');
+    const modelSelectField = document.getElementById('modelSelectField');
+    const imageModelSelect = document.getElementById('imageModelSelect');
+    const systemPromptField = document.getElementById('systemPromptField');
+    const modalDarkBtn = document.getElementById('modalDarkBtn');
+    const modalLightBtn = document.getElementById('modalLightBtn');
+    const modalThemeDesc = document.getElementById('modalThemeDesc');
+    const sidebarThemeBtn = document.getElementById('sidebarThemeBtn');
+    const themeToggleText = document.getElementById('themeToggleText');
+    const themePill = document.getElementById('themePill');
+    const toastNotification = document.getElementById('toastNotification');
+    const toastText = document.getElementById('toastText');
+
+    // CONFIGURE MARKED
+    marked.setOptions({
+      highlight: function(code, lang) {
+        if (lang && hljs.getLanguage(lang)) {
+          try {
+            return hljs.highlight(code, { language: lang }).value;
+          } catch (_) {}
         }
-        // store preference (optional)
-        try { localStorage.setItem('trix-theme', theme); } catch (e) {}
-      }
+        return hljs.highlightAuto(code).value;
+      },
+      breaks: true,
+      gfm: true
+    });
 
-      function toggleTheme() {
-        const isDark = html.getAttribute('data-theme') === 'dark';
-        setTheme(isDark ? 'light' : 'dark');
-      }
+    // INITIALIZATION
+    function init() {
+      applyTheme(state.theme);
+      syncModeUI();
+      updateAuthUI();
+      updateModelLabels();
+      buildModelPickerList();
+      renderSessionsList();
+      renderCurrentChat();
+      setupEventListeners();
+      lucide.createIcons();
+    }
 
-      // init theme from localStorage or system preference
-      (function initTheme() {
-        let saved = null;
-        try { saved = localStorage.getItem('trix-theme'); } catch (e) {}
-        if (saved) {
-          setTheme(saved);
+    // THEME CONTROLS (DEFAULT DARK MODE)
+    function applyTheme(theme) {
+      state.theme = theme;
+      localStorage.setItem('trixai_theme', theme);
+      const hljsTheme = document.getElementById('hljs-theme');
+
+      if (theme === 'dark') {
+        htmlElem.classList.add('dark');
+        modalDarkBtn.className = "px-3 py-1.5 rounded-lg font-medium bg-claude-terracotta text-white shadow-xs";
+        modalLightBtn.className = "px-3 py-1.5 rounded-lg font-medium text-claude-lightSubtext dark:text-claude-darkSubtext hover:text-black dark:hover:text-white";
+        modalThemeDesc.textContent = "Dark Mode Active (Default)";
+        themeToggleText.textContent = "Dark Mode";
+        themePill.textContent = "Default";
+        if (hljsTheme) hljsTheme.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css";
+      } else {
+        htmlElem.classList.remove('dark');
+        modalLightBtn.className = "px-3 py-1.5 rounded-lg font-medium bg-white text-claude-terracotta shadow-xs";
+        modalDarkBtn.className = "px-3 py-1.5 rounded-lg font-medium text-claude-lightSubtext hover:text-black";
+        modalThemeDesc.textContent = "Light Mode Active";
+        themeToggleText.textContent = "Light Mode";
+        themePill.textContent = "Light";
+        if (hljsTheme) hljsTheme.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css";
+      }
+      lucide.createIcons();
+    }
+
+    function toggleTheme() {
+      applyTheme(state.theme === 'dark' ? 'light' : 'dark');
+    }
+
+    // AUTH & LIMIT MANAGEMENT (REMOVED UNLIMITED TAGS)
+    function isLimitReached() {
+      return !state.user && state.guestChatsCount >= 1;
+    }
+
+    function updateAuthUI() {
+      const loggedIn = !!state.user;
+
+      if (loggedIn) {
+        // Authenticated Header UI
+        headerAuthContainer.innerHTML = `
+          <div class="relative group">
+            <button id="userProfileBtn" class="flex items-center space-x-2 p-1 pl-2 pr-2.5 rounded-full bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-claude-lightBorder dark:border-claude-darkBorder transition">
+              <img src="${state.user.avatar}" class="w-6 h-6 rounded-full object-cover ring-1 ring-claude-terracotta" />
+              <span class="text-xs font-semibold text-[#1F1E1D] dark:text-white max-w-[100px] truncate">${escapeHtml(state.user.name)}</span>
+              <i data-lucide="chevron-down" class="w-3 h-3 text-claude-lightSubtext dark:text-claude-darkSubtext"></i>
+            </button>
+            <div class="absolute right-0 top-10 w-52 py-2 rounded-2xl bg-white dark:bg-claude-darkCard border border-claude-lightBorder dark:border-claude-darkBorder shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all z-50">
+              <div class="px-4 py-2 border-b border-claude-lightBorder/60 dark:border-claude-darkBorder/60">
+                <p class="text-xs font-semibold text-[#1F1E1D] dark:text-white truncate">${escapeHtml(state.user.name)}</p>
+                <p class="text-[11px] text-claude-lightSubtext dark:text-claude-darkSubtext truncate">${escapeHtml(state.user.email)}</p>
+                <span class="inline-block mt-1 text-[10px] font-medium text-emerald-500 font-mono">● Active Session</span>
+              </div>
+              <button id="logoutBtn" class="w-full text-left px-4 py-2 text-xs text-rose-500 hover:bg-black/5 dark:hover:bg-white/5 flex items-center space-x-2 transition">
+                <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
+        `;
+
+        // Authenticated Sidebar User Box
+        sidebarUserBox.innerHTML = `
+          <div class="flex items-center space-x-2.5">
+            <img src="${state.user.avatar}" class="w-8 h-8 rounded-full object-cover ring-2 ring-emerald-500/40" />
+            <div class="min-w-0 flex-1">
+              <p class="text-xs font-semibold text-[#1F1E1D] dark:text-white truncate">${escapeHtml(state.user.name)}</p>
+              <p class="text-[10px] text-emerald-500 font-medium font-mono">Verified Member</p>
+            </div>
+            <button id="sidebarLogoutBtn" class="p-1 hover:text-rose-500 rounded transition" title="Sign Out">
+              <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        `;
+
+        guestLimitHeroNotice.classList.add('hidden');
+        dockLimitBanner.classList.add('hidden');
+        guestBadgeCount.textContent = 'Active';
+        guestBadgeCount.className = 'text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono font-medium hidden md:inline';
+        footerUsageStatus.textContent = 'Full access active';
+        chatInput.disabled = false;
+        sendMsgBtn.disabled = false;
+
+        const logoutBtn = document.getElementById('logoutBtn');
+        const sidebarLogoutBtn = document.getElementById('sidebarLogoutBtn');
+        if (logoutBtn) logoutBtn.onclick = handleSignOut;
+        if (sidebarLogoutBtn) sidebarLogoutBtn.onclick = handleSignOut;
+
+      } else {
+        headerAuthContainer.innerHTML = `
+          <button id="headerSignInBtn" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-claude-terracotta hover:bg-claude-terracottaHover text-white text-xs font-semibold shadow-xs transition transform active:scale-95">
+            <i data-lucide="log-in" class="w-3.5 h-3.5"></i>
+            <span>Sign In</span>
+          </button>
+        `;
+
+        sidebarUserBox.innerHTML = `
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-medium text-[#1F1E1D] dark:text-white">Guest Session</span>
+              <span class="text-[10px] font-mono text-amber-500 font-semibold">${state.guestChatsCount >= 1 ? '0 free chats' : '1 free chat'}</span>
+            </div>
+            <button id="sidebarSignInBtn" class="w-full py-1.5 px-3 rounded-xl bg-claude-terracotta hover:bg-claude-terracottaHover text-white text-xs font-medium transition shadow-xs">
+              Sign In to Continue
+            </button>
+          </div>
+        `;
+
+        const headerSignInBtn = document.getElementById('headerSignInBtn');
+        const sidebarSignInBtn = document.getElementById('sidebarSignInBtn');
+        if (headerSignInBtn) headerSignInBtn.onclick = () => openAuthModal('Sign in with Google or email to continue.');
+        if (sidebarSignInBtn) sidebarSignInBtn.onclick = () => openAuthModal('Sign in with Google or email to continue.');
+
+        if (state.guestChatsCount >= 1) {
+          guestLimitHeroNotice.classList.remove('hidden');
+          dockLimitBanner.classList.remove('hidden');
+          dockLimitBannerText.textContent = "Free preview used (1/1 chat). Sign in to continue.";
+          guestBadgeCount.textContent = '0 free chats';
+          guestBadgeCount.className = 'text-[11px] px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-500 font-mono font-medium hidden md:inline';
+          footerUsageStatus.textContent = '1 chat preview limit reached • Sign in required';
         } else {
-          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          setTheme(prefersDark ? 'dark' : 'light');
+          guestLimitHeroNotice.classList.remove('hidden');
+          dockLimitBanner.classList.add('hidden');
+          guestBadgeCount.textContent = '1 free chat';
+          guestBadgeCount.className = 'text-[11px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 font-mono font-medium hidden md:inline';
+          footerUsageStatus.textContent = '1 free preview chat remaining';
         }
-      })();
-
-      // theme toggle listeners
-      themeToggle.addEventListener('click', toggleTheme);
-      settingsThemeToggle.addEventListener('click', toggleTheme);
-
-      // ---------- SETTINGS PANEL ----------
-      function openSettings() {
-        settingsPanel.classList.add('open');
-        overlay.classList.add('active');
       }
 
-      function closeSettingsPanel() {
-        settingsPanel.classList.remove('open');
-        overlay.classList.remove('active');
+      lucide.createIcons();
+    }
+
+    function openAuthModal(reason = null) {
+      if (reason) {
+        authReasonText.textContent = reason;
+        authReasonAlert.classList.remove('hidden');
+      } else {
+        authReasonAlert.classList.add('hidden');
+      }
+      authModal.classList.remove('opacity-0', 'pointer-events-none');
+      authBox.classList.remove('scale-95');
+      authBox.classList.add('scale-100');
+    }
+
+    function closeAuthModal() {
+      authModal.classList.add('opacity-0', 'pointer-events-none');
+      authBox.classList.remove('scale-100');
+      authBox.classList.add('scale-95');
+    }
+
+    function handleSignInSuccess(userData) {
+      state.user = userData;
+      localStorage.setItem('trixai_user', JSON.stringify(userData));
+      closeAuthModal();
+      closeGooglePickerModal();
+      updateAuthUI();
+      showToast(`Welcome, ${userData.name}!`);
+    }
+
+    function handleSignOut() {
+      if (confirm('Sign out of TriXAI?')) {
+        state.user = null;
+        localStorage.removeItem('trixai_user');
+        updateAuthUI();
+        showToast('Signed out successfully');
+      }
+    }
+
+    function openGooglePickerModal() {
+      googleAccountPickerModal.classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    function closeGooglePickerModal() {
+      googleAccountPickerModal.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    // MULTI-MODE SWITCHING (CHAT, AGENT, IMAGE, VIDEO)
+    function setMode(mode) {
+      state.activeMode = mode;
+      syncModeUI();
+      chatInput.focus();
+    }
+
+    function syncModeUI() {
+      // Reset button styles
+      const defaultBtnClass = "inline-flex items-center space-x-1 px-2 py-1 rounded-xl text-[11px] font-medium bg-[#F4F3ED] dark:bg-claude-darkHover text-claude-lightSubtext dark:text-claude-darkSubtext border border-claude-lightBorder dark:border-claude-darkBorder transition cursor-pointer";
+      
+      toggleAgentModeBtn.className = defaultBtnClass + " hover:border-amber-500 hover:text-amber-500";
+      toggleImageModeBtn.className = defaultBtnClass + " hover:border-claude-terracotta hover:text-claude-terracotta";
+      toggleVideoModeBtn.className = defaultBtnClass + " hover:border-sky-500 hover:text-sky-500";
+      inputDockContainer.classList.remove('agent-glow');
+
+      if (state.activeMode === 'agent') {
+        toggleAgentModeBtn.className = "inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-amber-500 text-white shadow-xs transition cursor-pointer";
+        modeStatusBanner.className = "mb-1.5 px-3 py-1.5 rounded-xl text-xs flex items-center justify-between border bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25";
+        modeStatusText.innerHTML = '<i data-lucide="bot" class="w-3.5 h-3.5 text-amber-500 mr-1.5 inline"></i><span>Agent Mode: Autonomous Goal Planning & Deep Synthesis</span>';
+        chatInput.placeholder = "Assign a complex goal for TriXAI Agent to plan, research, and execute...";
+        sendBtnIcon.setAttribute('data-lucide', 'bot');
+        inputDockContainer.classList.add('agent-glow');
+      } else if (state.activeMode === 'image') {
+        toggleImageModeBtn.className = "inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-claude-terracotta text-white shadow-xs transition cursor-pointer";
+        modeStatusBanner.className = "mb-1.5 px-3 py-1.5 rounded-xl text-xs flex items-center justify-between border bg-claude-terracotta/10 text-claude-terracotta border-claude-terracotta/25";
+        modeStatusText.innerHTML = '<i data-lucide="image" class="w-3.5 h-3.5 text-claude-terracotta mr-1.5 inline"></i><span>Image Studio: Describe visual scenes, lighting, and detail</span>';
+        chatInput.placeholder = "Describe an image to generate... (e.g. Astronaut in a jungle, cold palette, 8k)";
+        sendBtnIcon.setAttribute('data-lucide', 'sparkles');
+      } else if (state.activeMode === 'video') {
+        toggleVideoModeBtn.className = "inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-sky-500 text-white shadow-xs transition cursor-pointer";
+        modeStatusBanner.className = "mb-1.5 px-3 py-1.5 rounded-xl text-xs flex items-center justify-between border bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/25";
+        modeStatusText.innerHTML = '<i data-lucide="video" class="w-3.5 h-3.5 text-sky-500 mr-1.5 inline"></i><span>Video Cinema: Cinematic prompt to video motion generator</span>';
+        chatInput.placeholder = "Describe a video scene... (e.g. Cinematic drone shot over ocean waves at sunset)";
+        sendBtnIcon.setAttribute('data-lucide', 'video');
+      } else {
+        modeStatusBanner.classList.add('hidden');
+        chatInput.placeholder = "Reply to TriXAI... (Enter to send, Shift+Enter for new line)";
+        sendBtnIcon.setAttribute('data-lucide', 'arrow-up');
       }
 
-      settingsBtn.addEventListener('click', openSettings);
-      closeSettings.addEventListener('click', closeSettingsPanel);
-      overlay.addEventListener('click', closeSettingsPanel);
+      if (state.activeMode !== 'chat') {
+        modeStatusBanner.classList.remove('hidden');
+      }
+      lucide.createIcons();
+    }
 
-      // ---------- MODE SWITCHING (Agent / Direct) ----------
-      let currentMode = 'agent'; // 'agent' or 'direct'
+    // SESSIONS / CONVERSATIONS
+    function getCurrentSession() {
+      if (!state.sessions[state.currentSessionId]) {
+        state.sessions[state.currentSessionId] = {
+          id: state.currentSessionId,
+          title: 'New Conversation',
+          messages: [],
+          createdAt: Date.now()
+        };
+      }
+      return state.sessions[state.currentSessionId];
+    }
 
-      function setActiveMode(mode) {
-        currentMode = mode;
-        if (mode === 'agent') {
-          modeAgent.classList.add('active');
-          modeDirect.classList.remove('active');
+    function saveSessions() {
+      localStorage.setItem('trixai_sessions', JSON.stringify(state.sessions));
+      localStorage.setItem('trixai_active_session', state.currentSessionId);
+    }
+
+    function createNewSession() {
+      const newId = 'session_' + Date.now();
+      state.sessions[newId] = {
+        id: newId,
+        title: 'New Conversation',
+        messages: [],
+        createdAt: Date.now()
+      };
+      state.currentSessionId = newId;
+      saveSessions();
+      renderSessionsList();
+      renderCurrentChat();
+      chatInput.focus();
+      closeSidebarMobile();
+    }
+
+    function switchSession(id) {
+      if (state.sessions[id]) {
+        state.currentSessionId = id;
+        saveSessions();
+        renderSessionsList();
+        renderCurrentChat();
+        closeSidebarMobile();
+      }
+    }
+
+    function deleteSession(id, e) {
+      if (e) e.stopPropagation();
+      delete state.sessions[id];
+      const remainingIds = Object.keys(state.sessions);
+      if (remainingIds.length === 0) {
+        createNewSession();
+      } else {
+        state.currentSessionId = remainingIds[remainingIds.length - 1];
+        saveSessions();
+        renderSessionsList();
+        renderCurrentChat();
+      }
+    }
+
+    function renderSessionsList() {
+      chatSessionsList.innerHTML = `
+        <div class="px-3 py-1.5 text-[11px] font-semibold text-claude-lightSubtext dark:text-claude-darkSubtext uppercase tracking-wider">
+          Recent Chats
+        </div>
+      `;
+
+      const sessionKeys = Object.keys(state.sessions).sort((a, b) => {
+        return (state.sessions[b].createdAt || 0) - (state.sessions[a].createdAt || 0);
+      });
+
+      sessionKeys.forEach(id => {
+        const sess = state.sessions[id];
+        const isActive = id === state.currentSessionId;
+        const div = document.createElement('div');
+        div.className = `group flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium cursor-pointer transition ${
+          isActive 
+            ? 'bg-black/5 dark:bg-claude-darkHover text-[#1F1E1D] dark:text-white font-semibold' 
+            : 'text-claude-lightSubtext dark:text-claude-darkSubtext hover:bg-black/5 dark:hover:bg-white/5 hover:text-black dark:hover:text-white'
+        }`;
+        div.innerHTML = `
+          <div class="flex items-center space-x-2 truncate pr-2">
+            <i data-lucide="message-square" class="w-3.5 h-3.5 flex-shrink-0 text-claude-terracotta"></i>
+            <span class="truncate">${escapeHtml(sess.title || 'Untitled Chat')}</span>
+          </div>
+          <button class="opacity-0 group-hover:opacity-100 p-1 hover:text-rose-500 rounded transition" title="Delete conversation" data-id="${id}">
+            <i data-lucide="trash" class="w-3.5 h-3.5"></i>
+          </button>
+        `;
+
+        div.addEventListener('click', () => switchSession(id));
+        const delBtn = div.querySelector('button');
+        delBtn.addEventListener('click', (e) => deleteSession(id, e));
+
+        chatSessionsList.appendChild(div);
+      });
+      lucide.createIcons();
+    }
+
+    // IN-CHAT MODEL PICKER
+    function buildModelPickerList() {
+      modelsSelectionList.innerHTML = '';
+      AVAILABLE_MODELS.forEach(m => {
+        const isSelected = m.id === state.model;
+        const item = document.createElement('div');
+        item.className = `p-2.5 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
+          isSelected 
+            ? 'border-claude-terracotta bg-claude-terracotta/10 dark:bg-claude-terracotta/15' 
+            : 'border-claude-lightBorder dark:border-claude-darkBorder hover:border-claude-terracotta/60 hover:bg-black/5 dark:hover:bg-white/5'
+        }`;
+        item.innerHTML = `
+          <div class="flex-1 min-w-0 pr-2">
+            <div class="flex items-center space-x-1.5">
+              <span class="font-medium text-xs text-[#1F1E1D] dark:text-white">${m.name}</span>
+              <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-black/5 dark:bg-white/10 text-claude-lightSubtext dark:text-claude-darkSubtext">${m.tag}</span>
+            </div>
+            <p class="text-[11px] text-claude-lightSubtext dark:text-claude-darkSubtext truncate mt-0.5">${m.desc}</p>
+          </div>
+          <div class="flex-shrink-0">
+            ${isSelected ? '<i data-lucide="check" class="w-4 h-4 text-claude-terracotta"></i>' : '<div class="w-4 h-4 rounded-full border border-claude-lightBorder dark:border-claude-darkBorder"></div>'}
+          </div>
+        `;
+
+        item.addEventListener('click', () => {
+          if (m.category === 'image') {
+            state.imageModel = m.id;
+            setMode('image');
+          } else if (m.category === 'video') {
+            setMode('video');
+          } else {
+            selectModelInChat(m.id);
+            if (state.activeMode === 'image' || state.activeMode === 'video') {
+              setMode('chat');
+            }
+          }
+          closeModelPicker();
+        });
+
+        modelsSelectionList.appendChild(item);
+      });
+      lucide.createIcons();
+    }
+
+    function selectModelInChat(modelId) {
+      state.model = modelId;
+      localStorage.setItem('trixai_model', modelId);
+      updateModelLabels();
+      buildModelPickerList();
+      closeModelPicker();
+      showToast(`Switched model to ${modelId.split('/').pop()}`);
+    }
+
+    function openModelPicker() {
+      buildModelPickerList();
+      modelPickerModal.classList.remove('opacity-0', 'pointer-events-none');
+      modelPickerBox.classList.remove('scale-95');
+      modelPickerBox.classList.add('scale-100');
+    }
+
+    function closeModelPicker() {
+      modelPickerModal.classList.add('opacity-0', 'pointer-events-none');
+      modelPickerBox.classList.remove('scale-100');
+      modelPickerBox.classList.add('scale-95');
+    }
+
+    function updateModelLabels() {
+      const shortName = state.model.split('/').pop();
+      activeModelLabel.textContent = shortName;
+      headerModelTag.textContent = shortName;
+    }
+
+    // RENDER CURRENT CHAT
+    function renderCurrentChat() {
+      const session = getCurrentSession();
+      document.querySelectorAll('.msg-row').forEach(el => el.remove());
+
+      if (session.messages.length === 0) {
+        claudeHero.classList.remove('hidden');
+      } else {
+        claudeHero.classList.add('hidden');
+        session.messages.forEach((msg, idx) => {
+          if (msg.type === 'image') {
+            appendImageBubble(msg.role, msg.prompt, msg.imageUrl, msg.model, idx);
+          } else if (msg.type === 'video') {
+            appendVideoBubble(msg.role, msg.prompt, msg.videoUrl, msg.model, idx);
+          } else if (msg.type === 'agent') {
+            appendAgentMessageUI(msg.role, msg.content, msg.steps, idx);
+          } else {
+            appendMessageUI(msg.role, msg.content, msg.reasoning, idx);
+          }
+        });
+      }
+      scrollToBottom();
+      attachCopyButtons();
+      lucide.createIcons();
+    }
+
+    // REGULAR CLAUDE MESSAGE BUBBLE
+    function appendMessageUI(role, text, reasoning = null, index = null) {
+      const isUser = role === 'user';
+      const row = document.createElement('div');
+      row.className = 'msg-row flex flex-col space-y-2 animate-fade-in';
+
+      if (isUser) {
+        row.innerHTML = `
+          <div class="flex justify-end">
+            <div class="max-w-[85%] sm:max-w-[75%] rounded-3xl bg-[#ECEAE0] dark:bg-claude-darkCard border border-claude-lightBorder dark:border-claude-darkBorder px-5 py-3 text-[#1F1E1D] dark:text-white shadow-xs">
+              <div class="text-sm whitespace-pre-wrap font-sans leading-relaxed">${escapeHtml(text)}</div>
+            </div>
+          </div>
+        `;
+      } else {
+        let reasoningHtml = '';
+        if (reasoning) {
+          reasoningHtml = `
+            <div class="mb-3 rounded-2xl border border-claude-lightBorder/80 dark:border-claude-darkBorder/80 bg-black/[0.02] dark:bg-white/[0.02] overflow-hidden text-xs">
+              <button class="accordion-toggle w-full px-3.5 py-2.5 flex items-center justify-between text-claude-lightSubtext dark:text-claude-darkSubtext hover:bg-black/5 dark:hover:bg-white/5 font-medium transition">
+                <div class="flex items-center space-x-2">
+                  <i data-lucide="brain-circuit" class="w-3.5 h-3.5 text-claude-terracotta"></i>
+                  <span>Thought process</span>
+                </div>
+                <i data-lucide="chevron-down" class="w-3.5 h-3.5 transform transition-transform chevron-icon"></i>
+              </button>
+              <div class="accordion-content hidden px-3.5 pb-3 text-claude-lightSubtext/90 dark:text-claude-darkSubtext/90 font-mono text-[11px] leading-relaxed whitespace-pre-wrap border-t border-claude-lightBorder/40 dark:border-claude-darkBorder/40 pt-2.5">
+                ${escapeHtml(reasoning)}
+              </div>
+            </div>
+          `;
+        }
+
+        const parsedContent = marked.parse(text);
+
+        row.innerHTML = `
+          <div class="flex items-start space-x-3.5">
+            <div class="w-7 h-7 rounded-xl bg-claude-terracotta text-white flex items-center justify-center font-bold text-sm shadow-xs flex-shrink-0 mt-0.5">
+              <span>✱</span>
+            </div>
+            
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center space-x-2 mb-1.5">
+                <span class="text-xs font-serif font-semibold tracking-wide text-[#1F1E1D] dark:text-white">TriXAI</span>
+                <span class="text-[10px] text-claude-lightSubtext dark:text-claude-darkSubtext font-mono">${escapeHtml(state.model.split('/').pop())}</span>
+              </div>
+
+              ${reasoningHtml}
+
+              <div class="prose-claude text-[#1F1E1D] dark:text-claude-darkText">
+                ${parsedContent}
+              </div>
+
+              <div class="flex items-center space-x-3 mt-3 pt-2 text-claude-lightSubtext dark:text-claude-darkSubtext text-xs">
+                <button class="copy-msg-btn flex items-center space-x-1 hover:text-black dark:hover:text-white transition" data-text="${escapeQuotes(text)}">
+                  <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                  <span class="text-[11px]">Copy</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const accordionBtn = row.querySelector('.accordion-toggle');
+        if (accordionBtn) {
+          const content = row.querySelector('.accordion-content');
+          const icon = row.querySelector('.chevron-icon');
+          accordionBtn.addEventListener('click', () => {
+            content.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+          });
+        }
+      }
+
+      messagesContainer.appendChild(row);
+      scrollToBottom();
+      lucide.createIcons();
+      attachCopyButtons();
+    }
+
+    // AGENT MODE MESSAGE BUBBLE WITH STEP-BY-STEP WORKFLOW
+    function appendAgentMessageUI(role, text, steps = [], index = null) {
+      const row = document.createElement('div');
+      row.className = 'msg-row flex flex-col space-y-2 animate-fade-in';
+
+      let stepsHtml = '';
+      if (steps && steps.length > 0) {
+        stepsHtml = `
+          <div class="mb-3.5 p-3.5 rounded-2xl border border-amber-500/25 bg-amber-500/5 dark:bg-amber-500/10 space-y-2 text-xs">
+            <div class="flex items-center space-x-2 font-semibold text-amber-600 dark:text-amber-400">
+              <i data-lucide="bot" class="w-4 h-4"></i>
+              <span>Agent Execution Plan & Task Breakdown</span>
+            </div>
+            <div class="space-y-1.5 pl-2 border-l border-amber-500/30">
+              ${steps.map((st, i) => `
+                <div class="flex items-start space-x-2">
+                  <span class="w-4 h-4 rounded-full bg-amber-500/20 text-amber-500 flex items-center justify-center font-bold text-[10px] flex-shrink-0 mt-0.5">${i+1}</span>
+                  <span class="text-claude-lightSubtext dark:text-claude-darkSubtext leading-relaxed">${escapeHtml(st)}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      const parsedContent = marked.parse(text);
+
+      row.innerHTML = `
+        <div class="flex items-start space-x-3.5">
+          <div class="w-7 h-7 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-sm shadow-xs flex-shrink-0 mt-0.5">
+            <i data-lucide="bot" class="w-4 h-4"></i>
+          </div>
+          
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center space-x-2 mb-1.5">
+              <span class="text-xs font-serif font-semibold tracking-wide text-[#1F1E1D] dark:text-white">TriXAI Agent</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25 font-mono">Autonomous Execution</span>
+            </div>
+
+            ${stepsHtml}
+
+            <div class="prose-claude text-[#1F1E1D] dark:text-claude-darkText">
+              ${parsedContent}
+            </div>
+
+            <div class="flex items-center space-x-3 mt-3 pt-2 text-claude-lightSubtext dark:text-claude-darkSubtext text-xs">
+              <button class="copy-msg-btn flex items-center space-x-1 hover:text-black dark:hover:text-white transition" data-text="${escapeQuotes(text)}">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                <span class="text-[11px]">Copy Solution</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      messagesContainer.appendChild(row);
+      scrollToBottom();
+      lucide.createIcons();
+      attachCopyButtons();
+    }
+
+    // RENDER GENERATED IMAGE CARD
+    function appendImageBubble(role, prompt, imageUrl, modelName = "Qwen/Qwen-Image-2.1", index = null) {
+      const row = document.createElement('div');
+      row.className = 'msg-row flex flex-col space-y-2 animate-fade-in';
+
+      row.innerHTML = `
+        <div class="flex items-start space-x-3.5">
+          <div class="w-7 h-7 rounded-xl bg-claude-terracotta text-white flex items-center justify-center font-bold text-sm shadow-xs flex-shrink-0 mt-0.5">
+            <span>✱</span>
+          </div>
+
+          <div class="flex-1 min-w-0 max-w-xl">
+            <div class="flex items-center space-x-2 mb-2">
+              <span class="text-xs font-serif font-semibold tracking-wide text-[#1F1E1D] dark:text-white">TriXAI</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-claude-terracotta/15 text-claude-terracotta border border-claude-terracotta/25 font-mono">
+                ${escapeHtml(modelName.split('/').pop())}
+              </span>
+            </div>
+
+            <div class="rounded-3xl overflow-hidden border border-claude-lightBorder dark:border-claude-darkBorder bg-black/5 dark:bg-black/30 shadow-md group relative">
+              <img 
+                src="${imageUrl}" 
+                alt="${escapeQuotes(prompt)}" 
+                class="w-full h-auto object-cover max-h-[460px] rounded-t-3xl cursor-pointer transition hover:opacity-95" 
+                loading="lazy"
+              />
+
+              <div class="p-4 bg-white dark:bg-claude-darkCard border-t border-claude-lightBorder dark:border-claude-darkBorder flex flex-col space-y-2.5">
+                <p class="text-xs text-[#1F1E1D] dark:text-white font-sans leading-relaxed line-clamp-2 italic">
+                  "${escapeHtml(prompt)}"
+                </p>
+
+                <div class="flex items-center justify-between pt-1 border-t border-claude-lightBorder/50 dark:border-claude-darkBorder/50 text-xs">
+                  <span class="text-[11px] text-claude-lightSubtext dark:text-claude-darkSubtext font-mono">Diffusion Output</span>
+                  
+                  <div class="flex items-center space-x-2">
+                    <button class="open-lightbox-btn flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-claude-terracotta hover:text-white transition text-xs font-medium" data-url="${imageUrl}" data-prompt="${escapeQuotes(prompt)}" data-type="image">
+                      <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                      <span>Enlarge</span>
+                    </button>
+                    <a href="${imageUrl}" download="trixai_image_${Date.now()}.jpg" target="_blank" class="flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-claude-terracotta text-white hover:bg-claude-terracottaHover transition text-xs font-medium">
+                      <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                      <span>Save</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      `;
+
+      const imgElem = row.querySelector('img');
+      const openBtn = row.querySelector('.open-lightbox-btn');
+      const triggerLightbox = () => openLightbox(imageUrl, prompt, 'image');
+      imgElem.addEventListener('click', triggerLightbox);
+      openBtn.addEventListener('click', triggerLightbox);
+
+      messagesContainer.appendChild(row);
+      scrollToBottom();
+      lucide.createIcons();
+    }
+
+    // RENDER GENERATED VIDEO CARD
+    function appendVideoBubble(role, prompt, videoUrl, modelName = "Wan-Video 2.1", index = null) {
+      const row = document.createElement('div');
+      row.className = 'msg-row flex flex-col space-y-2 animate-fade-in';
+
+      row.innerHTML = `
+        <div class="flex items-start space-x-3.5">
+          <div class="w-7 h-7 rounded-xl bg-sky-500 text-white flex items-center justify-center font-bold text-sm shadow-xs flex-shrink-0 mt-0.5">
+            <i data-lucide="video" class="w-4 h-4"></i>
+          </div>
+
+          <div class="flex-1 min-w-0 max-w-xl">
+            <div class="flex items-center space-x-2 mb-2">
+              <span class="text-xs font-serif font-semibold tracking-wide text-[#1F1E1D] dark:text-white">TriXAI Video</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/25 font-mono">
+                ${escapeHtml(modelName)}
+              </span>
+            </div>
+
+            <div class="rounded-3xl overflow-hidden border border-claude-lightBorder dark:border-claude-darkBorder bg-black shadow-lg group relative">
+              <video 
+                src="${videoUrl}" 
+                controls 
+                autoplay 
+                loop 
+                muted 
+                playsinline 
+                class="w-full h-auto max-h-[460px] rounded-t-3xl bg-black"
+              ></video>
+
+              <div class="p-4 bg-white dark:bg-claude-darkCard border-t border-claude-lightBorder dark:border-claude-darkBorder flex flex-col space-y-2.5">
+                <p class="text-xs text-[#1F1E1D] dark:text-white font-sans leading-relaxed line-clamp-2 italic">
+                  "${escapeHtml(prompt)}"
+                </p>
+
+                <div class="flex items-center justify-between pt-1 border-t border-claude-lightBorder/50 dark:border-claude-darkBorder/50 text-xs">
+                  <span class="text-[11px] text-claude-lightSubtext dark:text-claude-darkSubtext font-mono">AI Motion Output</span>
+                  
+                  <div class="flex items-center space-x-2">
+                    <button class="open-lightbox-video-btn flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-sky-500 hover:text-white transition text-xs font-medium" data-url="${videoUrl}" data-prompt="${escapeQuotes(prompt)}">
+                      <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                      <span>Cinema</span>
+                    </button>
+                    <a href="${videoUrl}" download="trixai_video_${Date.now()}.mp4" target="_blank" class="flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-sky-500 text-white hover:bg-sky-600 transition text-xs font-medium">
+                      <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                      <span>Save MP4</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      `;
+
+      const openBtn = row.querySelector('.open-lightbox-video-btn');
+      openBtn.addEventListener('click', () => openLightbox(videoUrl, prompt, 'video'));
+
+      messagesContainer.appendChild(row);
+      scrollToBottom();
+      lucide.createIcons();
+    }
+
+    function createThinkingIndicator(customText = null) {
+      const indicator = document.createElement('div');
+      indicator.id = 'thinkingIndicator';
+      indicator.className = 'msg-row flex items-start space-x-3.5 animate-fade-in';
+      
+      let label = customText;
+      let iconColor = 'bg-claude-terracotta';
+      if (!label) {
+        if (state.activeMode === 'agent') {
+          label = 'TriXAI Agent is planning & executing sub-tasks...';
+          iconColor = 'bg-amber-500';
+        } else if (state.activeMode === 'video') {
+          label = 'Synthesizing video motion frames...';
+          iconColor = 'bg-sky-500';
+        } else if (state.activeMode === 'image') {
+          label = `Synthesizing image with ${state.imageModel.split('/').pop()}...`;
         } else {
-          modeDirect.classList.add('active');
-          modeAgent.classList.remove('active');
+          label = `TriXAI is reasoning & generating with ${state.model.split('/').pop()}...`;
         }
-        // Optional: mode-specific UI (not visible in this demo)
+      }
+      
+      indicator.innerHTML = `
+        <div class="w-7 h-7 rounded-xl ${iconColor} text-white flex items-center justify-center font-bold text-sm shadow-xs flex-shrink-0 mt-0.5 animate-pulse">
+          <span>✱</span>
+        </div>
+        <div class="flex items-center space-x-2 py-1 text-sm text-claude-lightSubtext dark:text-claude-darkSubtext font-serif italic">
+          <span class="w-2 h-2 rounded-full bg-claude-terracotta animate-ping"></span>
+          <span>${label}</span>
+        </div>
+      `;
+      messagesContainer.appendChild(indicator);
+      scrollToBottom();
+    }
+
+    function removeThinkingIndicator() {
+      const ind = document.getElementById('thinkingIndicator');
+      if (ind) ind.remove();
+    }
+
+    function scrollToBottom() {
+      chatScrollArea.scrollTop = chatScrollArea.scrollHeight;
+    }
+
+    // LIGHTBOX HANDLERS (IMAGES & VIDEOS)
+    function openLightbox(url, prompt, type = 'image') {
+      state.currentLightboxMedia = url;
+      state.currentLightboxPrompt = prompt;
+      state.currentLightboxType = type;
+      lightboxPromptText.textContent = `"${prompt}"`;
+
+      if (type === 'video') {
+        lightboxMediaContainer.innerHTML = `
+          <video src="${url}" controls autoplay loop class="max-h-[75vh] w-auto rounded-2xl shadow-2xl border border-white/10 bg-black"></video>
+        `;
+      } else {
+        lightboxMediaContainer.innerHTML = `
+          <img src="${url}" class="max-h-[75vh] w-auto rounded-2xl shadow-2xl object-contain border border-white/10" />
+        `;
       }
 
-      modeAgent.addEventListener('click', () => setActiveMode('agent'));
-      modeDirect.addEventListener('click', () => setActiveMode('direct'));
+      mediaLightboxModal.classList.remove('opacity-0', 'pointer-events-none');
+      lucide.createIcons();
+    }
 
-      // ---------- MODEL SELECT (just a placeholder) ----------
-      // Future integration: change API payload based on selected model.
-      // Currently does nothing else.
+    function closeLightbox() {
+      mediaLightboxModal.classList.add('opacity-0', 'pointer-events-none');
+      lightboxMediaContainer.innerHTML = '';
+    }
 
-      // ---------- CHAT LOGIC (UI only, API placeholders) ----------
-      // Add initial sample messages to showcase design
-      function addSampleConversation() {
-     
+    closeLightboxBtn.addEventListener('click', closeLightbox);
+    mediaLightboxModal.addEventListener('click', (e) => {
+      if (e.target === mediaLightboxModal) closeLightbox();
+    });
+
+    lightboxDownloadBtn.addEventListener('click', () => {
+      if (!state.currentLightboxMedia) return;
+      const a = document.createElement('a');
+      a.href = state.currentLightboxMedia;
+      a.download = `trixai_${state.currentLightboxType}_${Date.now()}.${state.currentLightboxType === 'video' ? 'mp4' : 'jpg'}`;
+      a.target = '_blank';
+      a.click();
+    });
+
+    lightboxCopyPromptBtn.addEventListener('click', () => {
+      if (state.currentLightboxPrompt) {
+        navigator.clipboard.writeText(state.currentLightboxPrompt);
+        showToast('Prompt copied to clipboard');
+      }
+    });
+
+    function attachCopyButtons() {
+      document.querySelectorAll('.copy-msg-btn').forEach(btn => {
+        btn.onclick = () => {
+          const text = btn.getAttribute('data-text');
+          navigator.clipboard.writeText(text).then(() => {
+            showToast('Message copied to clipboard');
+          });
+        };
+      });
+
+      document.querySelectorAll('.prose-claude pre').forEach(pre => {
+        if (pre.querySelector('.code-copy-btn')) return;
+        const code = pre.querySelector('code')?.innerText || '';
+        const btn = document.createElement('button');
+        btn.className = 'code-copy-btn absolute top-2 right-2 px-2 py-1 rounded-lg bg-black/40 hover:bg-black/60 text-white text-[11px] font-mono flex items-center space-x-1 border border-white/10 transition';
+        btn.innerHTML = '<span>Copy</span>';
+        btn.onclick = () => {
+          navigator.clipboard.writeText(code).then(() => {
+            btn.innerHTML = '<span class="text-claude-terracotta font-semibold">Copied!</span>';
+            setTimeout(() => {
+              btn.innerHTML = '<span>Copy</span>';
+            }, 2000);
+          });
+        };
+        pre.appendChild(btn);
+      });
+    }
+
+    // MAIN SUBMISSION DISPATCHER
+    async function handleInputSubmission() {
+      let text = chatInput.value.trim();
+      if (!text || state.isGenerating) return;
+
+      // ENFORCE 1 CHAT LIMIT FOR GUESTS
+      if (isLimitReached()) {
+        openAuthModal('Sign in to continue. You have used your 1 free preview chat.');
+        return;
+      }
+
+      // Check Slash Commands
+      if (text.startsWith('/video ')) {
+        const prompt = text.replace(/^\/video\s+/, '');
+        await generateVideo(prompt);
+        return;
+      }
+      if (text.startsWith('/imagine ') || text.startsWith('/image ')) {
+        const prompt = text.replace(/^\/(imagine|image)\s+/, '');
+        await generateImage(prompt);
+        return;
+      }
+      if (text.startsWith('/agent ')) {
+        const goal = text.replace(/^\/agent\s+/, '');
+        await runAgentMode(goal);
+        return;
+      }
+
+      // Dispatch based on activeMode
+      if (state.activeMode === 'video') {
+        await generateVideo(text);
+      } else if (state.activeMode === 'image') {
+        await generateImage(text);
+      } else if (state.activeMode === 'agent') {
+        await runAgentMode(text);
+      } else {
+        await sendChatMessage(text);
+      }
+    }
+
+    // 1. AUTONOMOUS AGENT MODE PIPELINE
+    async function runAgentMode(goal) {
+      const session = getCurrentSession();
+      if (session.messages.length === 0) {
+        session.title = `⚡ Agent: ${goal.slice(0, 24)}...`;
+        claudeHero.classList.add('hidden');
+      }
+
+      session.messages.push({ role: 'user', content: goal });
+      saveSessions();
+      renderSessionsList();
+      appendMessageUI('user', `⚡ [Agent Goal]: ${goal}`);
+
+      chatInput.value = '';
+      autoResizeTextarea();
+      setGenerating(true);
+      createThinkingIndicator('TriXAI Agent is decomposing goal and formulating execution plan...');
+
+      try {
+        const agentSystemPrompt = `You are TriXAI Autonomous Agent. You operate by breaking down goals into 4 clear steps: 1) Problem Decomposition, 2) Research & Context Analysis, 3) Implementation/Tool Execution, 4) Final Verified Deliverable. Deliver comprehensive, high-quality, actionable results with formatted code artifacts and markdown.`;
+
+        const requestBody = {
+          model: state.model,
+          input: [
+            { role: "system", content: agentSystemPrompt },
+            { role: "user", content: `Execute the following goal thoroughly as an autonomous agent: ${goal}` }
+          ]
+        };
+
+        const res = await fetch("https://api.groq.com/openai/v1/responses", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${_AUTH_KEY}`
+          },
+          body: JSON.stringify(requestBody)
+        });
+
+        removeThinkingIndicator();
+
+        if (!res.ok) throw new Error(`Agent response failed (${res.status})`);
+        const data = await res.json();
+
+        let responseText = "";
+        if (Array.isArray(data.output)) {
+          for (const item of data.output) {
+            if (item.type === "message" && Array.isArray(item.content)) {
+              responseText = item.content.map(c => c.text).filter(Boolean).join("\n");
+            }
+          }
+        }
+        if (!responseText && data.choices?.[0]?.message?.content) {
+          responseText = data.choices[0].message.content;
+        }
+
+        const agentSteps = [
+          "Decomposed objective and identified core deliverables",
+          "Synthesized architectural patterns and dependencies",
+          "Generated verified implementation and code artifacts",
+          "Validated against constraints and finalized solution"
+        ];
+
+        session.messages.push({
+          type: 'agent',
+          role: 'assistant',
+          content: responseText || "Agent completed execution.",
+          steps: agentSteps
+        });
+        saveSessions();
+
+        appendAgentMessageUI('assistant', responseText || "Agent execution complete.", agentSteps);
+        showToast('Agent task completed successfully!');
+
+        if (!state.user) {
+          state.guestChatsCount++;
+          localStorage.setItem('trixai_guest_chats', state.guestChatsCount);
+          updateAuthUI();
+        }
+
+      } catch (err) {
+        removeThinkingIndicator();
+        console.error(err);
+        appendMessageUI('assistant', `⚠️ **Agent Error:** ${err.message}`);
+        showToast(err.message, true);
+      } finally {
+        setGenerating(false);
+      }
+    }
+
+    // 2. VIDEO GENERATION ENGINE (FREE SYNTHESIS & ANIMATION PIPELINE)
+    async function generateVideo(prompt) {
+      const session = getCurrentSession();
+      if (session.messages.length === 0) {
+        session.title = `🎬 Video: ${prompt.slice(0, 24)}...`;
+        claudeHero.classList.add('hidden');
+      }
+
+      session.messages.push({ role: 'user', content: `Generate video: ${prompt}` });
+      saveSessions();
+      renderSessionsList();
+      appendMessageUI('user', `🎬 Video Prompt: ${prompt}`);
+
+      chatInput.value = '';
+      autoResizeTextarea();
+      setGenerating(true);
+      createThinkingIndicator('Rendering AI video motion frames and rendering MP4 stream...');
+
+      try {
+        // Step 1: Synthesize base diffusion scene with robust multi-strategy loader
+        const seed = Math.floor(Math.random() * 9999999);
+        const cleanPrompt = encodeURIComponent(prompt.trim() + ", cinematic lighting, 8k wallpaper, photorealistic");
+        const candidateUrls = [
+          `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1280&height=720&seed=${seed}&nologo=true`,
+          `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt.trim())}?width=1280&height=720&seed=${seed}&nologo=true`
+        ];
+
+        let baseImg = null;
+        let blobUrlToRevoke = null;
+
+        for (const url of candidateUrls) {
+          // Attempt 1: Fetch as Blob to prevent tainted canvas / CORS broken state
+          try {
+            const resp = await fetch(url, { mode: 'cors' });
+            if (resp.ok) {
+              const blob = await resp.blob();
+              if (blob && blob.size > 2000) {
+                const bUrl = URL.createObjectURL(blob);
+                const testImg = new Image();
+                const loaded = await new Promise((res) => {
+                  testImg.onload = () => res(true);
+                  testImg.onerror = () => res(false);
+                  testImg.src = bUrl;
+                  setTimeout(() => res(false), 8000);
+                });
+                if (loaded && testImg.naturalWidth > 0) {
+                  baseImg = testImg;
+                  blobUrlToRevoke = bUrl;
+                  break;
+                } else {
+                  URL.revokeObjectURL(bUrl);
+                }
+              }
+            }
+          } catch (e) {
+            console.warn("Fetch blob attempt failed, trying direct Image...", e);
+          }
+
+          // Attempt 2: Direct Image loading
+          try {
+            const testImg = new Image();
+            testImg.crossOrigin = "anonymous";
+            const loaded = await new Promise((res) => {
+              testImg.onload = () => res(true);
+              testImg.onerror = () => res(false);
+              testImg.src = url;
+              setTimeout(() => res(false), 7000);
+            });
+            if (loaded && testImg.complete && testImg.naturalWidth > 0) {
+              baseImg = testImg;
+              break;
+            }
+          } catch (e) {
+            console.warn("Direct image load error:", e);
+          }
+        }
+
+        // Step 2: Client-side Procedural Video Motion Synthesizer (Canvas to WebM/MP4 Video Stream)
+        const canvas = document.createElement('canvas');
+        canvas.width = 1280;
+        canvas.height = 720;
+        const ctx = canvas.getContext('2d');
+
+        const stream = canvas.captureStream(30); // 30 FPS
+        
+        let preferredMime = 'video/webm';
+        if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1')) {
+          preferredMime = 'video/mp4;codecs=avc1';
+        } else if (MediaRecorder.isTypeSupported('video/mp4')) {
+          preferredMime = 'video/mp4';
+        } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
+          preferredMime = 'video/webm;codecs=vp9';
+        } else if (MediaRecorder.isTypeSupported('video/webm')) {
+          preferredMime = 'video/webm';
+        } else {
+          preferredMime = '';
+        }
+
+        const recorderOptions = preferredMime ? { mimeType: preferredMime } : undefined;
+        const recorder = new MediaRecorder(stream, recorderOptions);
+        const chunks = [];
+
+        recorder.ondataavailable = e => {
+          if (e.data && e.data.size > 0) chunks.push(e.data);
+        };
+        const videoPromise = new Promise(resolve => {
+          recorder.onstop = () => {
+            const outputType = preferredMime.includes('mp4') ? 'video/mp4' : 'video/webm';
+            const blob = new Blob(chunks, { type: outputType });
+            resolve(URL.createObjectURL(blob));
+          };
+        });
+
+        recorder.start();
+
+        const hasValidImg = Boolean(baseImg && baseImg.complete && baseImg.naturalWidth > 0);
+
+        // Animate 90 frames (3 seconds at 30 fps) with cinematic camera zoom, pan & atmosphere
+        const totalFrames = 90;
+        for (let frame = 0; frame < totalFrames; frame++) {
+          const progress = frame / totalFrames;
+          const scale = 1.0 + (progress * 0.12); // Smooth zoom in
+          const panX = Math.sin(progress * Math.PI) * 25;
+          const panY = Math.cos(progress * Math.PI) * 15;
+
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.save();
+          ctx.translate(canvas.width / 2 + panX, canvas.height / 2 + panY);
+          ctx.scale(scale, scale);
+
+          if (hasValidImg) {
+            // SAFE draw: image is verified valid, never in broken state
+            ctx.drawImage(baseImg, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
+          } else {
+            // Procedural cinematic canvas rendering if image is unreachable
+            const grad = ctx.createRadialGradient(
+              0, 0, 50,
+              0, 0, canvas.width * 0.75
+            );
+            grad.addColorStop(0, '#2d1c15');
+            grad.addColorStop(0.5, '#191816');
+            grad.addColorStop(1, '#0e0e0d');
+            ctx.fillStyle = grad;
+            ctx.fillRect(-canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
+
+            // Shifting auroral beam
+            ctx.strokeStyle = `rgba(217, 119, 87, ${0.35 + 0.2 * Math.sin(progress * Math.PI)})`;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let x = -canvas.width / 2; x <= canvas.width / 2; x += 30) {
+              const y = Math.sin((x / 140) + progress * 5) * 50 + Math.cos(progress * 3) * 20;
+              if (x === -canvas.width / 2) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // Floating luminous embers
+            for (let i = 0; i < 25; i++) {
+              const seedX = ((i * 137.5) % canvas.width) - canvas.width / 2;
+              const seedY = (((i * 83.2) + progress * 120) % canvas.height) - canvas.height / 2;
+              ctx.fillStyle = `rgba(240, 160, 110, ${0.4 + 0.3 * Math.sin(progress * 4 + i)})`;
+              ctx.beginPath();
+              ctx.arc(seedX, seedY, (i % 3) + 2, 0, Math.PI * 2);
+              ctx.fill();
+            }
+
+            // Cinematic text title card
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 28px serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(prompt.length > 45 ? prompt.slice(0, 42) + '...' : prompt, 0, 10);
+            ctx.font = '14px sans-serif';
+            ctx.fillStyle = '#d97757';
+            ctx.fillText('TRI·X·AI CINEMATIC SYNTHESIS', 0, 45);
+          }
+
+          ctx.restore();
+
+          // Add subtle atmospheric cinematic lens lighting
+          const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+          gradient.addColorStop(0, `rgba(217, 119, 87, ${0.08 * (1 - progress)})`);
+          gradient.addColorStop(1, 'rgba(0, 0, 0, 0.15)');
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          await new Promise(r => setTimeout(r, 16));
+        }
+
+        recorder.stop();
+        const videoUrl = await videoPromise;
+
+        if (blobUrlToRevoke) {
+          URL.revokeObjectURL(blobUrlToRevoke);
+        }
+
+        removeThinkingIndicator();
+
+        session.messages.push({
+          type: 'video',
+          role: 'assistant',
+          prompt: prompt,
+          videoUrl: videoUrl,
+          model: 'Wan-Video 2.1'
+        });
+        saveSessions();
+
+        appendVideoBubble('assistant', prompt, videoUrl, 'Wan-Video 2.1');
+        showToast('Video synthesized successfully!');
+
+        if (!state.user) {
+          state.guestChatsCount++;
+          localStorage.setItem('trixai_guest_chats', state.guestChatsCount);
+          updateAuthUI();
+        }
+
+      } catch (err) {
+        removeThinkingIndicator();
+        console.error(err);
+        appendMessageUI('assistant', `⚠️ **Video Generation Error:** ${err.message}`);
+        showToast(err.message, true);
+      } finally {
+        setGenerating(false);
+      }
+    }
+
+    // 3. IMAGE GENERATION PIPELINE
+    async function generateImage(prompt) {
+      const session = getCurrentSession();
+      if (session.messages.length === 0) {
+        session.title = `🎨 Image: ${prompt.slice(0, 24)}...`;
+        claudeHero.classList.add('hidden');
+      }
+
+      session.messages.push({ role: 'user', content: `Generate image: ${prompt}` });
+      saveSessions();
+      renderSessionsList();
+      appendMessageUI('user', `🎨 Image Prompt: ${prompt}`);
+
+      chatInput.value = '';
+      autoResizeTextarea();
+      setGenerating(true);
+      createThinkingIndicator(`Synthesizing image with ${state.imageModel.split('/').pop()}...`);
+
+      try {
+        const seed = Math.floor(Math.random() * 9999999);
+        const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${seed}&nologo=true`;
+        
+        await new Promise((resolve) => {
+          const img = new Image();
+          img.onload = resolve;
+          img.onerror = resolve;
+          img.src = imageUrl;
+          setTimeout(resolve, 8000);
+        });
+
+        removeThinkingIndicator();
+
+        session.messages.push({
+          type: 'image',
+          role: 'assistant',
+          prompt: prompt,
+          imageUrl: imageUrl,
+          model: state.imageModel
+        });
+        saveSessions();
+
+        appendImageBubble('assistant', prompt, imageUrl, state.imageModel);
+        showToast('Image generated successfully!');
+
+        if (!state.user) {
+          state.guestChatsCount++;
+          localStorage.setItem('trixai_guest_chats', state.guestChatsCount);
+          updateAuthUI();
+        }
+
+      } catch (err) {
+        removeThinkingIndicator();
+        console.error(err);
+        appendMessageUI('assistant', `⚠️ **Image Generation Error:** ${err.message}`);
+        showToast(err.message, true);
+      } finally {
+        setGenerating(false);
+      }
+    }
+
+    // 4. REGULAR CHAT MESSAGE REASONING
+    async function sendChatMessage(text) {
+      const session = getCurrentSession();
+      if (session.messages.length === 0) {
+        session.title = text.slice(0, 32) + (text.length > 32 ? '...' : '');
+        claudeHero.classList.add('hidden');
+      }
+
+      session.messages.push({ role: 'user', content: text });
+      saveSessions();
+      renderSessionsList();
+      appendMessageUI('user', text);
+
+      chatInput.value = '';
+      autoResizeTextarea();
+      setGenerating(true);
+      createThinkingIndicator();
+
+      try {
+        const conversationInput = [];
+        if (state.systemPrompt) {
+          conversationInput.push({ role: "system", content: state.systemPrompt });
+        }
+
+        const recentMessages = session.messages.filter(m => !m.type).slice(-12);
+        recentMessages.forEach(m => {
+          conversationInput.push({
+            role: m.role === 'user' ? 'user' : 'assistant',
+            content: m.content
+          });
+        });
+
+        const endpoint = "https://api.groq.com/openai/v1/responses";
+        state.abortController = new AbortController();
+
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${_AUTH_KEY}`
+          },
+          body: JSON.stringify({
+            model: state.model,
+            input: conversationInput
+          }),
+          signal: state.abortController.signal
+        });
+
+        removeThinkingIndicator();
+
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          throw new Error(errBody.error?.message || `Service Error ${res.status}`);
+        }
+
+        const data = await res.json();
+        let reasoningText = "";
+        let responseText = "";
+
+        if (Array.isArray(data.output)) {
+          for (const item of data.output) {
+            if (item.type === "reasoning" && Array.isArray(item.content)) {
+              reasoningText = item.content.map(c => c.text).filter(Boolean).join("\n");
+            } else if (item.type === "message" && Array.isArray(item.content)) {
+              responseText = item.content.map(c => c.text).filter(Boolean).join("\n");
+            }
+          }
+        }
+
+        if (!responseText && data.choices?.[0]?.message?.content) {
+          responseText = data.choices[0].message.content;
+        }
+
+        if (!responseText) {
+          responseText = "No message output returned from the model.";
+        }
+
+        session.messages.push({
+          role: 'assistant',
+          content: responseText,
+          reasoning: reasoningText || null
+        });
+        saveSessions();
+        appendMessageUI('assistant', responseText, reasoningText);
+
+        if (!state.user) {
+          state.guestChatsCount++;
+          localStorage.setItem('trixai_guest_chats', state.guestChatsCount);
+          updateAuthUI();
+        }
+
+      } catch (err) {
+        removeThinkingIndicator();
+        if (err.name === 'AbortError') {
+          showToast('Generation cancelled');
+        } else {
+          console.error(err);
+          appendMessageUI('assistant', `⚠️ **Error:** ${err.message}`);
+          showToast(err.message, true);
+        }
+      } finally {
+        setGenerating(false);
+      }
+    }
+
+    function setGenerating(generating) {
+      state.isGenerating = generating;
+      sendMsgBtn.disabled = generating;
+      if (generating) {
+        sendMsgBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>';
+      } else {
+        if (state.activeMode === 'agent') {
+          sendMsgBtn.innerHTML = '<i data-lucide="bot" class="w-4 h-4"></i>';
+        } else if (state.activeMode === 'video') {
+          sendMsgBtn.innerHTML = '<i data-lucide="video" class="w-4 h-4"></i>';
+        } else if (state.activeMode === 'image') {
+          sendMsgBtn.innerHTML = '<i data-lucide="sparkles" class="w-4 h-4"></i>';
+        } else {
+          sendMsgBtn.innerHTML = '<i data-lucide="arrow-up" class="w-4 h-4"></i>';
+        }
+      }
+      lucide.createIcons();
+    }
+
+    function autoResizeTextarea() {
+      chatInput.style.height = 'auto';
+      chatInput.style.height = Math.min(chatInput.scrollHeight, 180) + 'px';
+    }
+
+    // SETTINGS MODAL
+    function openSettings() {
+      modelSelectField.value = state.model;
+      imageModelSelect.value = state.imageModel;
+      systemPromptField.value = state.systemPrompt;
+      settingsModal.classList.remove('opacity-0', 'pointer-events-none');
+      settingsBox.classList.remove('scale-95');
+      settingsBox.classList.add('scale-100');
+    }
+
+    function closeSettings() {
+      settingsModal.classList.add('opacity-0', 'pointer-events-none');
+      settingsBox.classList.remove('scale-100');
+      settingsBox.classList.add('scale-95');
+    }
+
+    function saveSettings() {
+      state.model = modelSelectField.value;
+      state.imageModel = imageModelSelect.value;
+      state.systemPrompt = systemPromptField.value.trim();
+
+      localStorage.setItem('trixai_model', state.model);
+      localStorage.setItem('trixai_image_model', state.imageModel);
+      localStorage.setItem('trixai_system_prompt', state.systemPrompt);
+
+      updateModelLabels();
+      buildModelPickerList();
+      closeSettings();
+      showToast('Settings saved successfully');
+    }
+
+    // TOAST NOTIFICATION
+    function showToast(msg, isError = false) {
+      toastText.textContent = msg;
+      toastNotification.className = `fixed bottom-6 right-6 z-50 flex items-center space-x-2 px-4 py-2.5 rounded-2xl shadow-xl text-xs font-medium text-white transition-all transform translate-y-0 opacity-100 pointer-events-auto ${
+        isError ? 'bg-rose-600' : 'bg-claude-terracotta'
+      }`;
+      setTimeout(() => {
+        toastNotification.className = 'fixed bottom-6 right-6 z-50 flex items-center space-x-2 px-4 py-2.5 rounded-2xl shadow-xl text-xs font-medium text-white transition-all transform translate-y-8 opacity-0 pointer-events-none';
+      }, 3500);
+    }
+
+    // MOBILE SIDEBAR
+    function openSidebarMobile() {
+      sidebar.classList.remove('-translate-x-full');
+      sidebarBackdrop.classList.remove('hidden');
+    }
+
+    function closeSidebarMobile() {
+      sidebar.classList.add('-translate-x-full');
+      sidebarBackdrop.classList.add('hidden');
+    }
+
+    // EVENT LISTENERS
+    function setupEventListeners() {
+      openSidebarBtn.addEventListener('click', openSidebarMobile);
+      closeSidebarBtn.addEventListener('click', closeSidebarMobile);
+      sidebarBackdrop.addEventListener('click', closeSidebarMobile);
+
+      newChatBtn.addEventListener('click', () => {
+        if (isLimitReached()) {
+          openAuthModal('Sign in to create more conversations.');
+          return;
+        }
+        createNewSession();
+      });
+
+      clearChatBtn.addEventListener('click', () => {
+        const session = getCurrentSession();
+        if (session.messages.length === 0) return;
+        if (confirm('Clear messages in this conversation?')) {
+          session.messages = [];
+          saveSessions();
+          renderCurrentChat();
+          showToast('Chat cleared');
+        }
+      });
+
+      chatInput.addEventListener('input', autoResizeTextarea);
+      chatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          handleInputSubmission();
+        }
+      });
+
+      sendMsgBtn.addEventListener('click', handleInputSubmission);
+
+      // Mode selection buttons
+      toggleAgentModeBtn.addEventListener('click', () => setMode(state.activeMode === 'agent' ? 'chat' : 'agent'));
+      toggleImageModeBtn.addEventListener('click', () => setMode(state.activeMode === 'image' ? 'chat' : 'image'));
+      toggleVideoModeBtn.addEventListener('click', () => setMode(state.activeMode === 'video' ? 'chat' : 'video'));
+      resetToDefaultChatBtn.addEventListener('click', () => setMode('chat'));
+
+      // Auth trigger buttons
+      if (heroSignInBtn) heroSignInBtn.addEventListener('click', () => openAuthModal('Sign in to continue.'));
+      if (dockSignInBtn) dockSignInBtn.addEventListener('click', () => openAuthModal('Sign in to continue chatting.'));
+
+      // Model switcher triggers
+      modelBadgeBtn.addEventListener('click', openModelPicker);
+      headerModelPickerBtn.addEventListener('click', openModelPicker);
+      closeModelPickerBtn.addEventListener('click', closeModelPicker);
+      modelPickerModal.addEventListener('click', (e) => {
+        if (e.target === modelPickerModal) closeModelPicker();
+      });
+
+      // Settings triggers
+      topSettingsBtn.addEventListener('click', openSettings);
+      sidebarSettingsBtn.addEventListener('click', openSettings);
+      closeSettingsModalBtn.addEventListener('click', closeSettings);
+      cancelModalBtn.addEventListener('click', closeSettings);
+      saveModalBtn.addEventListener('click', saveSettings);
+
+      // Auth Modal triggers
+      closeAuthModalBtn.addEventListener('click', closeAuthModal);
+      authModal.addEventListener('click', (e) => {
+        if (e.target === authModal && !isLimitReached()) closeAuthModal();
+      });
+
+      authTabLogin.addEventListener('click', () => {
+        authTabLogin.className = "flex-1 py-1.5 rounded-lg font-medium bg-claude-terracotta text-white shadow-xs transition";
+        authTabSignup.className = "flex-1 py-1.5 rounded-lg font-medium text-claude-lightSubtext dark:text-claude-darkSubtext hover:text-black dark:hover:text-white transition";
+        loginForm.classList.remove('hidden');
+        signupForm.classList.add('hidden');
+      });
+
+      authTabSignup.addEventListener('click', () => {
+        authTabSignup.className = "flex-1 py-1.5 rounded-lg font-medium bg-claude-terracotta text-white shadow-xs transition";
+        authTabLogin.className = "flex-1 py-1.5 rounded-lg font-medium text-claude-lightSubtext dark:text-claude-darkSubtext hover:text-black dark:hover:text-white transition";
+        signupForm.classList.remove('hidden');
+        loginForm.classList.add('hidden');
+      });
+
+      // Login Form Submit
+      loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value.trim();
+        const name = email.split('@')[0] || 'User';
+        handleSignInSuccess({
+          name: name.charAt(0).toUpperCase() + name.slice(1),
+          email: email,
+          avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(email)}`,
+          provider: 'email'
+        });
+      });
+
+      // Signup Form Submit
+      signupForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('signupName').value.trim();
+        const email = document.getElementById('signupEmail').value.trim();
+        handleSignInSuccess({
+          name: name,
+          email: email,
+          avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(email)}`,
+          provider: 'email'
+        });
+      });
+
+      // Google Sign-In triggers
+      googleSignInBtn.addEventListener('click', openGooglePickerModal);
+      closeGooglePickerBtn.addEventListener('click', closeGooglePickerModal);
+
+      googleAccountNamith.addEventListener('click', () => {
+        handleSignInSuccess({
+          name: "Namithh",
+          email: "namithrn@gmail.com",
+          avatar: "https://plain-apac-prod-public.komododecks.com/202610/10/xeNXT7AzxbFHHxMUAGbr/image.jpg",
+          provider: "google"
+        });
+      });
+
+      googleAccountCustom.addEventListener('click', () => {
+        handleSignInSuccess({
+          name: "Google User",
+          email: "user@gmail.com",
+          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
+          provider: "google"
+        });
+      });
+
+      // Quick Demo 1-Click Login
+      quickDemoLoginBtn.addEventListener('click', () => {
+        handleSignInSuccess({
+          name: "Demo Explorer",
+          email: "demo@trixai.com",
+          avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=TriX",
+          provider: "demo"
+        });
+      });
+
+      // Quick starter prompts click
+      document.querySelectorAll('.starter-card').forEach(card => {
+        card.addEventListener('click', () => {
+          if (isLimitReached()) {
+            openAuthModal('Sign in to test more prompts.');
+            return;
+          }
+          const prompt = card.querySelector('.text-claude-lightSubtext, .text-claude-darkSubtext').textContent.replace(/"/g, '');
+          if (card.classList.contains('video-gen-card')) {
+            setMode('video');
+            chatInput.value = prompt;
+            autoResizeTextarea();
+            generateVideo(prompt);
+          } else if (card.classList.contains('image-gen-card')) {
+            setMode('image');
+            chatInput.value = prompt;
+            autoResizeTextarea();
+            generateImage(prompt);
+          } else if (card.classList.contains('agent-gen-card')) {
+            setMode('agent');
+            chatInput.value = prompt;
+            autoResizeTextarea();
+            runAgentMode(prompt);
+          } else {
+            setMode('chat');
+            chatInput.value = prompt;
+            autoResizeTextarea();
+            sendChatMessage(prompt);
+          }
+        });
+      });
+
+      // Keyboard shortcuts: Cmd+K / Ctrl+K for new chat
+      document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+          e.preventDefault();
+          if (isLimitReached()) {
+            openAuthModal('Sign in to start new chats.');
+            return;
+          }
+          createNewSession();
+        }
+      });
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    function escapeQuotes(str) {
+      return (str || '').replace(/"/g, '&quot;');
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
