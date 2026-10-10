@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TriX AI — modern chat</title>
+  <style>
+    /* ---------- CSS RESET / VARIABLES ---------- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      /* light theme (default) */
+      --bg: #f9fafc;
+      --surface: #ffffff;
+      --surface-soft: #f1f4f9;
+      --text-primary: #0b0f16;
+      --text-secondary: #5b677b;
+      --border-light: #e2e8f0;
+      --accent: #3b7cff;
+      --accent-soft: #e9f0ff;
+      --shadow-sm: 0 8px 20px -6px rgba(0, 0, 0, 0.04), 0 2px 6px -2px rgba(0, 0, 0, 0.02);
+      --bubble-user: #3b7cff;
+      --bubble-user-text: #ffffff;
+      --bubble-ai: #ffffff;
+      --bubble-ai-text: #0b0f16;
+      --toggle-bg: #e2e8f0;
+      --toggle-knob: #ffffff;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0d1117;
+      --surface: #161c24;
+      --surface-soft: #1e2630;
+      --text-primary: #eef2f8;
+      --text-secondary: #9aa6b8;
+      --border-light: #2a3440;
+      --accent: #4d8aff;
+      --accent-soft: #1a2740;
+      --shadow-sm: 0 8px 20px -6px rgba(0, 0, 0, 0.5), 0 2px 6px -2px rgba(0, 0, 0, 0.3);
+      --bubble-user: #2f6eed;
+      --bubble-user-text: #ffffff;
+      --bubble-ai: #1f2937;
+      --bubble-ai-text: #eef2f8;
+      --toggle-bg: #2e3a48;
+      --toggle-knob: #cfddee;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.25s ease, color 0.2s ease;
+      padding: 16px;
+      margin: 0;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ---------- CHAT CARD ---------- */
+    .chat-card {
+      width: 100%;
+      max-width: 720px;
+      height: 90vh;
+      max-height: 820px;
+      background: var(--surface);
+      border-radius: 32px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-light);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
+      backdrop-filter: blur(2px);
+    }
+
+    /* ---------- HEADER ---------- */
+    .chat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border-light);
+      background: var(--surface);
+      transition: border-color 0.25s, background 0.25s;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 18px;
+      box-shadow: 0 4px 10px -2px var(--accent);
+    }
+
+    .brand h1 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .brand h1 span {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* theme toggle */
+    .theme-toggle {
+      width: 52px;
+      height: 28px;
+      background: var(--toggle-bg);
+      border-radius: 100px;
+      border: none;
+      cursor: pointer;
+      padding: 0 4px;
+      display: flex;
+      align-items: center;
+      transition: background 0.25s;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .theme-toggle .knob {
+      width: 22px;
+      height: 22px;
+      background: var(--toggle-knob);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      line-height: 1;
+    }
+
+    [data-theme="dark"] .theme-toggle .knob {
+      transform: translateX(24px);
+    }
+
+    /* settings gear */
+    .icon-btn {
+      background: transparent;
+      border: none;
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: background 0.2s, color 0.2s;
+      font-size: 18px;
+    }
+
+    .icon-btn:hover {
+      background: var(--surface-soft);
+      color: var(--text-primary);
+    }
+
+    /* ---------- MODE BAR (Agent / Direct + model) ---------- */
+    .mode-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 24px 8px 24px;
+      gap: 12px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border-light);
+      background: var(--surface);
+      transition: background 0.25s, border-color 0.25s;
+    }
+
+    .mode-group {
+      display: flex;
+      background: var(--surface-soft);
+      padding: 3px;
+      border-radius: 40px;
+      gap: 2px;
+    }
+
+    .mode-btn {
+      border: none;
+      background: transparent;
+      padding: 8px 18px;
+      border-radius: 40px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+    }
+
+    .mode-btn.active {
+      background: var(--surface);
+      color: var(--text-primary);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      font-weight: 600;
+    }
+
+    .model-selector {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface-soft);
+      padding: 4px 12px 4px 16px;
+      border-radius: 40px;
+      border: 1px solid transparent;
+      transition: border 0.2s;
+    }
+
+    .model-selector select {
+      background: transparent;
+      border: none;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      padding: 8px 0;
+      cursor: pointer;
+      outline: none;
+      width: 130px;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235b677b' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0px center;
+      padding-right: 18px;
+    }
+
+    .model-selector select option {
+      background: var(--surface);
+      color: var(--text-primary);
+    }
+
+    /* ---------- CHAT MESSAGES ---------- */
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px 8px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      background: var(--surface);
+      transition: background 0.25s;
+      scroll-behavior: smooth;
+    }
+
+    /* scrollbar minimal */
+    .chat-messages::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+      background: var(--border-light);
+      border-radius: 20px;
+    }
+
+    .message {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      max-width: 85%;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+
+    .message.ai {
+      align-self: flex-start;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      flex-shrink: 0;
+      background: var(--surface-soft);
+      color: var(--text-secondary);
+    }
+
+    .message.user .avatar {
+      background: var(--accent);
+      color: white;
+    }
+
+    .message.ai .avatar {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .bubble {
+      padding: 12px 18px;
+      border-radius: 22px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      word-break: break-word;
+      box-shadow: 0 2px 6px -4px rgba(0, 0, 0, 0.05);
+      max-width: 100%;
+    }
+
+    .message.user .bubble {
+      background: var(--bubble-user);
+      color: var(--bubble-user-text);
+      border-bottom-right-radius: 6px;
+    }
+
+    .message.ai .bubble {
+      background: var(--bubble-ai);
+      color: var(--bubble-ai-text);
+      border: 1px solid var(--border-light);
+      border-bottom-left-radius: 6px;
+    }
+
+    /* ---------- INPUT AREA ---------- */
+    .chat-input-area {
+      padding: 16px 24px 20px 24px;
+      background: var(--surface);
+      border-top: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: background 0.25s, border-color 0.25s;
+      flex-shrink: 0;
+    }
+
+    .input-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      background: var(--surface-soft);
+      border-radius: 30px;
+      padding: 4px 6px 4px 20px;
+      transition: background 0.2s, box-shadow 0.2s;
+      border: 1px solid transparent;
+    }
+
+    .input-wrapper:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .input-wrapper input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 0.95rem;
+      padding: 12px 6px 12px 0;
+      color: var(--text-primary);
+      outline: none;
+    }
+
+    .input-wrapper input::placeholder {
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+
+    .send-btn {
+      background: var(--accent);
+      border: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: white;
+      font-size: 18px;
+      transition: background 0.2s, transform 0.1s;
+      box-shadow: 0 4px 10px -2px var(--accent);
+      flex-shrink: 0;
+    }
+
+    .send-btn:hover {
+      background: color-mix(in srgb, var(--accent) 85%, black);
+      transform: scale(1.02);
+    }
+
+    .send-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* ---------- SETTINGS PANEL (hidden by default) ---------- */
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 300px;
+      height: 100vh;
+      background: var(--surface);
+      border-left: 1px solid var(--border-light);
+      box-shadow: -10px 0 30px -10px rgba(0, 0, 0, 0.1);
+      padding: 30px 24px;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .settings-panel.open {
+      transform: translateX(0);
+    }
+
+    .settings-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .settings-header h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .close-settings {
+      background: transparent;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .close-settings:hover {
+      background: var(--surface-soft);
+      color: var(--text-primary);
+    }
+
+    .settings-item {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .settings-item label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .settings-item .placeholder-box {
+      background: var(--surface-soft);
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      border: 1px dashed var(--border-light);
+      font-family: monospace;
+      word-break: break-all;
+    }
+
+    .settings-item .placeholder-box span {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .theme-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface-soft);
+      padding: 14px 18px;
+      border-radius: 16px;
+    }
+
+    .theme-row span {
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    /* overlay for settings */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(2px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+      z-index: 999;
+    }
+
+    .overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* small screens */
+    @media (max-width: 600px) {
+      .chat-card {
+        height: 95vh;
+        border-radius: 24px;
+      }
+      .chat-header { padding: 14px 18px; }
+      .mode-bar { padding: 8px 16px; }
+      .chat-messages { padding: 16px 16px 6px; }
+      .chat-input-area { padding: 14px 16px 18px; }
+      .message { max-width: 92%; }
+      .settings-panel { width: 280px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- MAIN CHAT CARD -->
+  <div class="chat-card">
+    <!-- Header -->
+    <header class="chat-header">
+      <div class="brand">
+        <div class="brand-icon">T</div>
+        <h1>TriX <span>AI</span></h1>
+      </div>
+      <div class="header-actions">
+        <!-- Theme toggle (light/dark) -->
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+          <span class="knob" id="themeKnob">☀️</span>
+        </button>
+        <!-- Settings gear -->
+        <button class="icon-btn" id="settingsBtn" aria-label="Settings">
+          ⚙️
+        </button>
+      </div>
+    </header>
+
+    <!-- Mode & model bar -->
+    <div class="mode-bar">
+      <div class="mode-group">
+        <button class="mode-btn active" id="modeAgent">Agent Mode</button>
+        <button class="mode-btn" id="modeDirect">Direct Chat</button>
+      </div>
+      <div class="model-selector">
+        <select id="modelSelect" aria-label="Choose model">
+          <option value="trix-mini">TriX Mini</option>
+          <option value="trix-pro" selected>TriX Pro</option>
+          <option value="trix-ultra">TriX Ultra</option>
+          <option value="trix-vision">TriX Vision</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Messages container -->
+    <div class="chat-messages" id="chatMessages">
+      <!-- sample messages (will be replaced by JS at runtime) -->
+    </div>
+
+    <!-- Input area -->
+    <div class="chat-input-area">
+      <div class="input-wrapper">
+        <input type="text" id="messageInput" placeholder="Message TriX AI…" autocomplete="off" />
+      </div>
+      <button class="send-btn" id="sendBtn" aria-label="Send message">➤</button>
+    </div>
+  </div>
+
+  <!-- SETTINGS PANEL (hidden by default) -->
+  <div class="overlay" id="overlay"></div>
+  <aside class="settings-panel" id="settingsPanel">
+    <div class="settings-header">
+      <h2>Settings</h2>
+      <button class="close-settings" id="closeSettings">✕</button>
+    </div>
+
+    <div class="settings-item">
+      <label>API Endpoint</label>
+      <div class="placeholder-box">
+        <span>https://api.trix.ai/v1</span><br>— placeholder —
+      </div>
+    </div>
+
+    <div class="settings-item">
+      <label>API Key</label>
+      <div class="placeholder-box">
+        <span>••••••••••••••••</span> (sk-...)
+      </div>
+    </div>
+
+    <div class="settings-item">
+      <label>Appearance</label>
+      <div class="theme-row">
+        <span>Dark mode</span>
+        <button class="theme-toggle" id="settingsThemeToggle" style="width:52px;height:28px;">
+          <span class="knob" id="settingsKnob">☀️</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <script>
+    (function() {
+      // ---------- DOM ELEMENTS ----------
+      const html = document.documentElement;
+      const themeToggle = document.getElementById('themeToggle');
+      const themeKnob = document.getElementById('themeKnob');
+      const settingsThemeToggle = document.getElementById('settingsThemeToggle');
+      const settingsKnob = document.getElementById('settingsKnob');
+
+      const chatMessages = document.getElementById('chatMessages');
+      const messageInput = document.getElementById('messageInput');
+      const sendBtn = document.getElementById('sendBtn');
+
+      const modeAgent = document.getElementById('modeAgent');
+      const modeDirect = document.getElementById('modeDirect');
+      const modelSelect = document.getElementById('modelSelect');
+
+      const settingsBtn = document.getElementById('settingsBtn');
+      const settingsPanel = document.getElementById('settingsPanel');
+      const closeSettings = document.getElementById('closeSettings');
+      const overlay = document.getElementById('overlay');
+
+      // ---------- THEME HANDLING (light / dark) ----------
+      function setTheme(theme) {
+        if (theme === 'dark') {
+          html.setAttribute('data-theme', 'dark');
+          themeKnob.textContent = '🌙';
+          settingsKnob.textContent = '🌙';
+        } else {
+          html.removeAttribute('data-theme');
+          themeKnob.textContent = '☀️';
+          settingsKnob.textContent = '☀️';
+        }
+        // store preference (optional)
+        try { localStorage.setItem('trix-theme', theme); } catch (e) {}
+      }
+
+      function toggleTheme() {
+        const isDark = html.getAttribute('data-theme') === 'dark';
+        setTheme(isDark ? 'light' : 'dark');
+      }
+
+      // init theme from localStorage or system preference
+      (function initTheme() {
+        let saved = null;
+        try { saved = localStorage.getItem('trix-theme'); } catch (e) {}
+        if (saved) {
+          setTheme(saved);
+        } else {
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          setTheme(prefersDark ? 'dark' : 'light');
+        }
+      })();
+
+      // theme toggle listeners
+      themeToggle.addEventListener('click', toggleTheme);
+      settingsThemeToggle.addEventListener('click', toggleTheme);
+
+      // ---------- SETTINGS PANEL ----------
+      function openSettings() {
+        settingsPanel.classList.add('open');
+        overlay.classList.add('active');
+      }
+
+      function closeSettingsPanel() {
+        settingsPanel.classList.remove('open');
+        overlay.classList.remove('active');
+      }
+
+      settingsBtn.addEventListener('click', openSettings);
+      closeSettings.addEventListener('click', closeSettingsPanel);
+      overlay.addEventListener('click', closeSettingsPanel);
+
+      // ---------- MODE SWITCHING (Agent / Direct) ----------
+      let currentMode = 'agent'; // 'agent' or 'direct'
+
+      function setActiveMode(mode) {
+        currentMode = mode;
+        if (mode === 'agent') {
+          modeAgent.classList.add('active');
+          modeDirect.classList.remove('active');
+        } else {
+          modeDirect.classList.add('active');
+          modeAgent.classList.remove('active');
+        }
+        // Optional: mode-specific UI (not visible in this demo)
+      }
+
+      modeAgent.addEventListener('click', () => setActiveMode('agent'));
+      modeDirect.addEventListener('click', () => setActiveMode('direct'));
+
+      // ---------- MODEL SELECT (just a placeholder) ----------
+      // Future integration: change API payload based on selected model.
+      // Currently does nothing else.
+
+      // ---------- CHAT LOGIC (UI only, API placeholders) ----------
+      // Add initial sample messages to showcase design
+      function addSampleConversation() {
+     
